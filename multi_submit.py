@@ -12,20 +12,21 @@ job_name = sys.argv[1]
 parameters_file = 'options.txt'
 phi_low = 100
 phi_high = 6000
-#phi_step = 295 # 20 mass points
-phi_step = 59 # 100 mass points
+phi_step = 295 # 20 mass points
+#phi_step = 59 # 100 mass points
 omega_low = 0.25
 omega_high = 10
-#omega_step = 0.4875 # 20 mass points
-omega_step = 0.0975 # 100 mass points
-num_per_mass_point = 10000
-max_materialize = 50
+omega_step = 0.4875 # 20 mass points
+#omega_step = 0.0975 # 100 mass points
+#omega_step = 0.0000975 # 100,000 mass points
+num_per_mass_point = 10
+max_materialize = 250
 
 # create mass points file
 with open(parameters_file, "w") as f:
   for phi_mass in range(phi_low, phi_high, phi_step):
-    for omega_mass in range(int(omega_low*10000), int(omega_high*10000), int(omega_step*10000)):
-      line = ", ".join([str(phi_mass), str(omega_mass/10000.0), str(num_per_mass_point)]) + '\n'
+    for omega_mass in range(int(omega_low*100000000), int(omega_high*100000000), int(omega_step*100000000)):
+      line = ", ".join([str(phi_mass), str(omega_mass/100000000.0), str(num_per_mass_point)]) + '\n'
       f.write(line)
 
 # submit file
@@ -42,7 +43,7 @@ sub['output'] = '$(Cluster)_$(Process)_out.txt'
 sub['error'] = '$(Cluster)_$(Process)_out.txt'
 sub['log'] = 'log_$(Cluster).txt'
 sub['max_materialize'] = max_materialize
-sub['DEST'] = '/store/user/bchiari1/lhe/' + job_name + '/'
+sub['DEST'] = '/store/user/bchiari1/siggen/lhe/' + job_name + '/'
 
 # job directory
 os.system('mkdir ' + job_name)

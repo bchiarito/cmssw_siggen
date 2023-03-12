@@ -7,7 +7,7 @@ import sys
 sub = htcondor.Submit()
 sub['executable'] = 'execute.sh'
 #sub['arguments'] = '749 0.55 1'
-sub['arguments'] = str(sys.argv[1]) + ' ' + str(sys.argv[2]) + ' ' + str(sys.argv[3])
+sub['arguments'] = str(sys.argv[1]) + ' ' + str(sys.argv[2]) + ' ' + str(sys.argv[3]) + ' ' + '/store/user/bchiari1/siggen/lhe/' + str(sys.argv[4]) + '/'
 sub['+JobFlavor'] = 'longlunch'
 sub['Notification'] = 'Never'
 sub['use_x509userproxy'] = 'true'
