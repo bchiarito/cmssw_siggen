@@ -19,6 +19,7 @@ args = parser.parse_args()
 # settings
 job_name = args.run_name+'_STEP_lhe'
 job_dir = 'Job_'+job_name
+job_output = args.run_name
 phi_num = args.phi_num
 omega_num = args.omega_num
 num_per_mass_point = args.ev_per_point
@@ -60,7 +61,7 @@ sub['output'] = '$(Cluster)_$(Process)_out.txt'
 sub['error'] = '$(Cluster)_$(Process)_out.txt'
 sub['log'] = 'log_$(Cluster).txt'
 sub['max_materialize'] = max_materialize
-sub['DEST'] = '/store/user/bchiari1/siggen/lhe/' + job_name + '/'
+sub['DEST'] = '/store/user/bchiari1/siggen/lhe/' + job_output + '/'
 
 # job directory
 os.system('mkdir ' + job_dir)
