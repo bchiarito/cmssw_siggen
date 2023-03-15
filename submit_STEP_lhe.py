@@ -29,8 +29,8 @@ phi_low = 100
 phi_high = 6000
 omega_low = 0.25
 omega_high = 10
-phi_step = round((phi_high - phi_low)/phi_num)
-omega_step = round((omega_high - omega_low)/omega_num)
+phi_step = (phi_high - phi_low)/phi_num
+omega_step = (omega_high - omega_low)/omega_num
 
 # summary
 print('Phi from', phi_low, 'to', phi_high, 'in steps of', phi_step)
@@ -42,9 +42,9 @@ if response == 'q':
 
 # create mass points file
 with open(parameters_file, "w") as f:
-  for phi_mass in range(phi_low, phi_high, phi_step):
+  for phi_mass in range(int(phi_low*100), int(phi_high*100), int(phi_step*100)):
     for omega_mass in range(int(omega_low*100000000), int(omega_high*100000000), int(omega_step*100000000)):
-      line = ", ".join([str(phi_mass), str(omega_mass/100000000.0), str(num_per_mass_point)]) + '\n'
+      line = ", ".join([str(phi_mass/100.0), str(omega_mass/100000000.0), str(num_per_mass_point)]) + '\n'
       f.write(line)
 
 # submit file
@@ -82,5 +82,8 @@ result = schedd.submit(sub, itemdata = iterator)
 cluster_id = result.cluster()
 print('ClusterID', cluster_id)
 
-# cleanup
+# finish
+with open('job_info.py', 'w') as f:
+  f.write('output = "/store/user/bchiari1/siggen/lhe/'+job_output+'/"\n')
+os.system('mv job_info.py '+job_dir)
 os.system('rm '+parameters_file)
