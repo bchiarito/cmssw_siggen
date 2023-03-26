@@ -27,7 +27,7 @@ cd ${_CONDOR_SCRATCH_DIR}
 pwd
 
 printf "\n\nDoing LHE > GEN\n"
-cmsRun GEN_$2_cfg.py inputFile=file:$6 hadronizer=$3 numEvents=$4
+cmsRun GEN_$2_cfg.py inputFile=$6 hadronizer=$3 numEvents=$4
 ls
 
 printf "\n\nDoing GEN > SIM\n"
@@ -71,4 +71,4 @@ ls
 
 #Cleaning up
 xrdcp --nopbar miniAOD_$1.root $5/miniAOD_$1.root
-rm $6 GEN.root SIM.root DIGIPremix.root HLT.root RECO.root miniAOD_$1.root
+rm GEN.root SIM.root DIGIPremix.root HLT.root RECO.root miniAOD_$1.root
