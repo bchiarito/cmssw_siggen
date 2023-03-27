@@ -12,7 +12,8 @@ args = parser.parse_args()
 
 input_directory = args.mini_eos
 output_directory = '/store/user/bchiari1/siggen/mergedmini/'+args.run_name+'/'
-job_dir = 'Job_'+args.run_name+'_STEP_mergemini'
+job_name = args.run_name+'_STEP_mergemini'
+job_dir = 'Job_'+job_name
 submit_file = 'merge_submit.jdl'
 max_mat = args.max
 
@@ -31,9 +32,10 @@ should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 max_materialize = {}
 OUTPUT_EOS = {}
+JobBatchName = {}
 
 queue INPUT_EOS, FINALFILE_NAME from queue.dat
-'''.format(job_dir, max_mat, output_directory)
+'''.format(job_dir, max_mat, output_directory, job_name)
 )
 
 list_of_subdirs = (subprocess.getoutput("xrdfs root://cmseos.fnal.gov ls " + input_directory)).split('\n')

@@ -70,6 +70,7 @@ sub['max_materialize'] = max_materialize
 sub['DEST'] = '/store/user/bchiari1/siggen/lhe/' + job_output + '/'
 #sub['request_memory'] = 4000
 sub['request_memory'] = 8000
+sub['JobBatchName'] = job_name
 
 # job directory
 os.system('mkdir ' + job_dir)

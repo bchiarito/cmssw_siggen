@@ -11,7 +11,8 @@ parser.add_argument('-s', '--split', type=int, default=1, help='split each lhe i
 parser.add_argument('-m', '--max', type=int, default=250, help='max_materialize (default 250)')
 args = parser.parse_args()
 
-job_dir = 'Job_'+args.run_name+'_STEP_mini'
+job_name = args.run_name+'_STEP_mini'
+job_dir = 'Job_'+job_name
 input_lhe_location = args.input_lhe
 splitting = args.split
 output_eos = '/store/user/bchiari1/siggen/mini/'+args.run_name
@@ -79,9 +80,10 @@ should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 max_materialize = {}
 INPUT_LHE = $(LHEBASE)_$(FILE_NUM).lhe
+JobBatchName = {}
 
 queue LHEBASE, FILE_NUM, OUTPUT_EOS from queue.dat
-""".format(job_dir, str(args.max))
+""".format(job_dir, str(args.max), job_name)
 )
 os.system('cp '+submit_jdl_filename + ' ' + job_dir)
 
