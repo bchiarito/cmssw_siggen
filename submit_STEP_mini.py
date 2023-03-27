@@ -43,15 +43,10 @@ for count, file in enumerate(list_of_lhes):
       os.system('rm '+local_lhe_filename[:-4]+'_C'+str(count)+'_'+str(i)+'.lhe')
   os.system('rm '+local_lhe_filename)
 
-#sys.exit()
-
-#print(output_eos)
-
 # generate condor queue data
 with open('queue.dat', 'w') as f:
   remote_split_lhes = (subprocess.getoutput("xrdfs root://cmseos.fnal.gov ls " + input_lhe_location+'/split-'+args.run_name)).split('\n')
   for file in remote_split_lhes:
-  #for file in os.listdir(job_dir+'/lhe/'):
     x = file.rfind('_')
     y = file.rfind('.')
     c = file.rfind('C')
@@ -61,13 +56,8 @@ with open('queue.dat', 'w') as f:
     count = file[c+1:x]
     b = base.rfind('/')
     out_tag = base[b+1:]
-    #print(output_eos)
-    #print(name)
-    #print(base)
-    #print(out_tag)
     output = os.path.join(output_eos, out_tag)
     f.write(base + ' ' + num + ' ' + output + '\n')
-    #print(base + ' ' + num + ' ' + output + '\n')
 os.system('cp queue.dat ' + job_dir)
 
 # make new submit file
@@ -94,8 +84,6 @@ queue LHEBASE, FILE_NUM, OUTPUT_EOS from queue.dat
 """.format(job_dir, str(args.max))
 )
 os.system('cp '+submit_jdl_filename + ' ' + job_dir)
-
-#sys.exit()
 
 # submit
 os.system('condor_submit '+submit_jdl_filename)
