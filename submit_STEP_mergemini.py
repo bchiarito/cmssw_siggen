@@ -6,11 +6,23 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('run_name', help='name of job for output and jobdir')
-parser.add_argument('mini_eos', help='top level eos area of miniaod, each subdirectory will yield one rootfile')
+parser.add_argument('input_jobdir', help='jobdir of mini step')
 parser.add_argument('-m', '--max', type=int, default=250, help='max_materialize (default 250)')
 args = parser.parse_args()
 
-input_directory = args.mini_eos
+# find mini step output area
+loc = "."
+dirs = []
+for d in os.listdir(loc):
+  if os.path.isdir(d) and d.startswith(args.input_jobdir):
+    dirs.append(os.path.join(loc, d))
+if not len(dirs)==1: raise SystemExit("Job Directory pattern returned zero or >1 directories.")
+jobDir = dirs[0]
+sys.path.append(jobDir)
+import job_info as job
+input_mini_location = job.output
+
+input_directory = input_mini_location
 output_directory = '/store/user/bchiari1/siggen/mergedmini/'+args.run_name+'/'
 job_name = args.run_name+'_STEP_mergemini'
 job_dir = 'Job_'+job_name
