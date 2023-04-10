@@ -6,47 +6,35 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('run_name', help='name for output eos area')
-parser.add_argument('input_lhe', help='eos area with .lhe files')
-parser.add_argument('-s', '--split', type=int, default=1, help='split each lhe into this many subjobs')
+parser.add_argument('input_jobdir', help='job directory for lhe step')
 parser.add_argument('-m', '--max', type=int, default=250, help='max_materialize (default 250)')
 args = parser.parse_args()
 
 job_name = args.run_name+'_STEP_mini'
 job_dir = 'Job_'+job_name
-input_lhe_location = args.input_lhe
-splitting = args.split
 output_eos = '/store/user/bchiari1/siggen/mini/'+args.run_name
-
 submit_jdl_filename = 'submit_STEP_mini.jdl'
+
+# find lhe step output area
+loc = "."
+dirs = []
+for d in os.listdir(loc):
+  if os.path.isdir(d) and d.startswith(args.input_jobdir):
+    dirs.append(os.path.join(loc, d))
+if not len(dirs)==1: raise SystemExit("Job Directory pattern returned zero or >1 directories.")
+jobDir = dirs[0]
+sys.path.append(jobDir)
+import job_info as job
+input_lhe_location = job.output
 
 # make job directory
 os.system('mkdir '+job_dir)
 os.system('mkdir -p '+job_dir+'/stdout/')
 os.system('mkdir -p '+job_dir+'/lhe/')
 
-# split lhes and copy to job directory
-list_of_lhes = (subprocess.getoutput("xrdfs root://cmseos.fnal.gov ls " + input_lhe_location)).split('\n')
-#print(list_of_lhes)
-for count, file in enumerate(list_of_lhes):
-  if not file.endswith('.lhe'): continue
-  #print('xrdcp root://cmseos.fnal.gov/'+file+' .')
-  os.system('xrdcp root://cmseos.fnal.gov/'+file+' .')
-  local_lhe_filename = os.path.basename(file)
-  if splitting == 1:
-    print('xrdcp ' + local_lhe_filename + ' root://cmseos.fnal.gov/'+input_lhe_location+'/split-'+args.run_name+'/'+local_lhe_filename)
-    os.system('xrdcp ' + local_lhe_filename + ' root://cmseos.fnal.gov/'+input_lhe_location+'/split-'+args.run_name+'/'+local_lhe_filename)
-  elif splitting > 1:
-    command = 'python splitLHE.py ' + local_lhe_filename + ' ' + local_lhe_filename[:-4]+'_C'+str(count)+'_ '+str(splitting)
-    print(command)
-    os.system(command)
-    for i in range(splitting):
-      os.system('xrdcp ' + local_lhe_filename[:-4]+'_C'+str(count)+'_'+str(i)+'.lhe ' + 'root://cmseos.fnal.gov/'+input_lhe_location+'/split-'+args.run_name+'/'+local_lhe_filename[:-4]+'_C'+str(count)+'_'+str(i)+'.lhe')
-      os.system('rm '+local_lhe_filename[:-4]+'_C'+str(count)+'_'+str(i)+'.lhe')
-  os.system('rm '+local_lhe_filename)
-
 # generate condor queue data
 with open('queue.dat', 'w') as f:
-  remote_split_lhes = (subprocess.getoutput("xrdfs root://cmseos.fnal.gov ls " + input_lhe_location+'/split-'+args.run_name)).split('\n')
+  remote_split_lhes = (subprocess.getoutput("xrdfs root://cmseos.fnal.gov ls " + input_lhe_location)).split('\n')
   for file in remote_split_lhes:
     x = file.rfind('_')
     y = file.rfind('.')
@@ -90,6 +78,9 @@ os.system('cp '+submit_jdl_filename + ' ' + job_dir)
 # submit
 os.system('condor_submit '+submit_jdl_filename)
 
-# cleanup
+# finish
+with open('job_info.py', 'w') as f:
+  f.write('output = "'+output_eos+'/"\n')  
+os.system('mv job_info.py '+job_dir)
 os.system('rm '+submit_jdl_filename)
 os.system('rm queue.dat')
