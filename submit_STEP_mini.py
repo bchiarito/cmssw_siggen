@@ -30,7 +30,6 @@ input_lhe_location = job.output
 # make job directory
 os.system('mkdir '+job_dir)
 os.system('mkdir -p '+job_dir+'/stdout/')
-os.system('mkdir -p '+job_dir+'/lhe/')
 
 # generate condor queue data
 with open('queue.dat', 'w') as f:
