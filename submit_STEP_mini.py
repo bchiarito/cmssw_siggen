@@ -6,7 +6,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('run_name', help='name for output eos area')
-parser.add_argument('input_jobdir', help='job directory for lhe step')
+parser.add_argument('input_jobdir', help='job directory for splitlhe step')
 parser.add_argument('-m', '--max', type=int, default=250, help='max_materialize (default 250)')
 args = parser.parse_args()
 
