@@ -4,6 +4,9 @@ import classad
 import htcondor
 import sys
 import os
+import subprocess
+
+griduser_id = (subprocess.check_output("voms-proxy-info --identity", shell=True).decode('utf-8')).split('/')[5][3:]
 
 # command line options
 import argparse
@@ -67,7 +70,7 @@ sub['output'] = '$(Cluster)_$(Process)_out.txt'
 sub['error'] = '$(Cluster)_$(Process)_out.txt'
 sub['log'] = 'log_$(Cluster).txt'
 sub['max_materialize'] = max_materialize
-sub['DEST'] = '/store/user/bchiari1/siggen/lhe/' + job_output + '/'
+sub['DEST'] = '/store/user/'+griduser_id+'/siggen/lhe/' + job_output + '/'
 #sub['request_memory'] = 4000
 sub['request_memory'] = 8000
 sub['JobBatchName'] = job_name
@@ -93,6 +96,6 @@ print('ClusterID', cluster_id)
 
 # finish
 with open('job_info.py', 'w') as f:
-  f.write('output = "/store/user/bchiari1/siggen/lhe/'+job_output+'/"\n')
+  f.write('output = "/store/user/'+griduser_id+'/siggen/lhe/'+job_output+'/"\n')
 os.system('mv job_info.py '+job_dir)
 os.system('rm '+parameters_file)

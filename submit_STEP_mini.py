@@ -4,6 +4,8 @@ import os
 import subprocess
 import argparse
 
+griduser_id = (subprocess.check_output("voms-proxy-info --identity", shell=True).decode('utf-8')).split('/')[5][3:]
+
 parser = argparse.ArgumentParser()
 parser.add_argument('run_name', help='name for output eos area')
 parser.add_argument('input_jobdir', help='job directory for splitlhe step')
@@ -12,7 +14,7 @@ args = parser.parse_args()
 
 job_name = args.run_name+'_STEP_mini'
 job_dir = 'Job_'+job_name
-output_eos = '/store/user/bchiari1/siggen/mini/'+args.run_name
+output_eos = '/store/user/'+griduser_id+'/siggen/mini/'+args.run_name
 submit_jdl_filename = 'submit_STEP_mini.jdl'
 
 # find lhe step output area

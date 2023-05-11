@@ -4,6 +4,8 @@ import os
 import subprocess
 import argparse
 
+griduser_id = (subprocess.check_output("voms-proxy-info --identity", shell=True).decode('utf-8')).split('/')[5][3:]
+
 parser = argparse.ArgumentParser()
 parser.add_argument('run_name', help='name of job for output and jobdir')
 parser.add_argument('input_jobdir', help='jobdir of mini step')
@@ -23,7 +25,7 @@ import job_info as job
 input_mini_location = job.output
 
 input_directory = input_mini_location
-output_directory = '/store/user/bchiari1/siggen/mergedmini/'+args.run_name+'/'
+output_directory = '/store/user/'+griduser_id+'/siggen/mergedmini/'+args.run_name+'/'
 job_name = args.run_name+'_STEP_mergemini'
 job_dir = 'Job_'+job_name
 submit_file = 'merge_submit.jdl'
