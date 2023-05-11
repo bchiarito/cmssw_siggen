@@ -21,14 +21,12 @@ for count, file in enumerate(list_of_lhes):
   os.system('xrdcp root://cmseos.fnal.gov/'+file+' .')
   local_lhe_filename = os.path.basename(file)
   if splitting == 1:
-    print('xrdcp ' + local_lhe_filename + ' root://cmseos.fnal.gov/'+args.input_loc+'/split-'+args.run_name+'/'+local_lhe_filename)
-    os.system('xrdcp ' + local_lhe_filename + ' root://cmseos.fnal.gov/'+args.input_loc+'/split-'+args.run_name+'/'+local_lhe_filename)
+    os.system('xrdcp ' + local_lhe_filename + ' root://cmseos.fnal.gov/'+args.output_loc+'/'+local_lhe_filename)
   elif splitting > 1:
     command = 'python splitLHE.py ' + local_lhe_filename + ' ' + local_lhe_filename[:-4]+'_C'+str(count)+'_ '+str(splitting)
     print(command)
     os.system(command)
     for i in range(splitting):
-      #os.system('xrdcp ' + local_lhe_filename[:-4]+'_C'+str(count)+'_'+str(i)+'.lhe ' + 'root://cmseos.fnal.gov/'+args.input_loc+'/split-'+args.run_name+'/'+local_lhe_filename[:-4]+'_C'+str(count)+'_'+str(i)+'.lhe')
       os.system('xrdcp ' + local_lhe_filename[:-4]+'_C'+str(count)+'_'+str(i)+'.lhe ' + 'root://cmseos.fnal.gov/'+args.output_loc+'/'+local_lhe_filename[:-4]+'_C'+str(count)+'_'+str(i)+'.lhe')
       os.system('rm '+local_lhe_filename[:-4]+'_C'+str(count)+'_'+str(i)+'.lhe')
   os.system('rm '+local_lhe_filename)
