@@ -11,6 +11,7 @@ from datetime import datetime, timedelta, date
 import datetime
 import socket
 
+submit_filename = 'submit_STEP_mini.jdl'
 
 # get site
 hostname = socket.gethostname()
@@ -237,25 +238,29 @@ for p in procs:
 procs_string = procs_string[:-1]
 
 # create new submit jdl
-batchName = "resub_for_"+job.cluster
+batchName = "resub_for_"+str(job.cluster)
 with open(args.jobDir+'/'+submit_filename) as f:
-  submit_string = f.read()
-  submit_string += "\nJobBatchName = " + batchName
-  submit_string += '\nnoop_job = !stringListMember("$(Process)","'+procs_string+'")'
-  submit_string += '\nTEMP = $(Process) + ' + str(first_proc)
-  submit_string += '\nGLOBAL_PROC = $INT(TEMP)'
-
-# make submit object
-sub = htcondor.Submit(submit_string)
-print(sub)
+  with open('submit_resubmit.jdl', 'w') as s:
+    submit_string = f.readlines()
+    queue_statment = submit_string.pop()
+    submit_string.append("\nJobBatchName = " + batchName+"\n")
+    submit_string.append('\nnoop_job = !stringListMember("$(Process)","'+procs_string+'")\n')
+    submit_string.append(queue_statment+'\n')
+    s.writelines(submit_string)
+print(submit_string)
+os.system('cp '+args.jobDir+'/queue.dat .')
 
 # move/delete old output
+
 # submit the job
-if args.verbose: print("DEBUG: Submitting Jobs")
-with schedd.transaction() as txn:
-  cluster_id = sub.queue(txn, count=int(job.queue))
-  print("ClusterId: ", cluster_id)
+proc = subprocess.Popen('condor_submit submit_resubmit.jdl', stdout=subprocess.PIPE, shell=True)
+(out, err) = proc.communicate()
+out = ((out.decode('utf-8')).split('\n'))[1]
+cluster = (out.split()[-1])[:-1]
+print(cluster)
 
 # update job_info.py
 with open(args.jobDir+'/job_info.py', 'a') as f:
-  f.write("resubmits.append(('"+str(cluster_id)+"',["+procs_string+"]))\n")
+  f.write("resubmits.append(('"+str(cluster)+"',["+procs_string+"]))\n")
+os.system('mv submit_resubmit.jdl '+args.jobDir+'/'+'resubmit_'+str(cluster)+'.jdl')
+os.system('rm queue.dat')
