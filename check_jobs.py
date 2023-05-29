@@ -70,6 +70,67 @@ if site == 'cmslpc':
   schedd_ad = coll_query[0]
 schedd = htcondor.Schedd(schedd_ad)
 
+# make list of procs to resubmit
+if args.resubmit:
+  procs_to_resub = []
+  for a, b in re.findall(r'(\d+)-?(\d*)', args.resubmit):
+    procs_to_resub.extend(range(int(a), int(a)+1 if b=='' else int(b)+1))
+  procs_string = ''
+  for p in procs_to_resub:
+    procs_string += str(p)+','
+  procs_string = procs_string[:-1]
+
+  # create new submit jdl
+  batchName = "resub_for_"+str(job.cluster)
+  with open(args.jobDir+'/'+submit_filename) as f:
+    with open('submit_resubmit.jdl', 'w') as s:
+      submit_string = f.readlines()
+      queue_statment = submit_string.pop()
+      submit_string.append("\nJobBatchName = " + batchName+"\n")
+      submit_string.append('\nnoop_job = !stringListMember("$(Process)","'+procs_string+'")\n')
+      submit_string.append(queue_statment+'\n')
+      s.writelines(submit_string)
+  #print(submit_string)
+  os.system('cp '+args.jobDir+'/queue.dat .')
+
+  # delete old output
+  subdirs = (subprocess.getoutput('eos root://cmseos.fnal.gov ls '+output_area)).split('\n')
+  for dir in subdirs:
+    ls_output = subprocess.getoutput('eos root://cmseos.fnal.gov ls -lh '+output_area+'/'+dir)
+    for line in ls_output.split('\n'):
+      l = line.split()
+      if len(l) <= 6: continue
+      try:
+        fi = l[len(l)-1]
+        size = l[4]+' '+l[5]
+        u = fi.rfind('_')
+        d = fi.rfind('.')
+        S = int(fi[u+1:d]) # from outputfile
+        if dir[-1] == '/': dir = dir[:-1]
+        c = dir.rfind('C')
+        C = int(dir[c+1:])
+        proc = CStoproc(C, S)
+        if proc >= procs: continue
+        if proc < 0: continue
+        if proc in procs_to_resub:
+          #print('eos root://cmseos.fnal.gov rm '+output_area+'/'+dir+'/'+fi)
+          subprocess.Popen('eos root://cmseos.fnal.gov rm '+output_area+'/'+dir+'/'+fi, shell=True)
+      except: pass
+
+  # submit the job
+  proc = subprocess.Popen('condor_submit submit_resubmit.jdl', stdout=subprocess.PIPE, shell=True)
+  (out, err) = proc.communicate()
+  out = ((out.decode('utf-8')).split('\n'))[1]
+  cluster = (out.split()[-1])[:-1]
+
+  # update job_info.py
+  with open(args.jobDir+'/job_info.py', 'a') as f:
+    f.write("resubmits.append(('"+str(cluster)+"',["+procs_string+"]))\n")
+  os.system('mv submit_resubmit.jdl '+args.jobDir+'/'+'resubmit_'+str(cluster)+'.jdl')
+  os.system('rm queue.dat')
+  
+  raise SystemExit('Finished resubmitting cluster ID '+str(cluster))
+
 # loop over logs and get proc statuses
 jobInfos = [{} for i in range(procs)]
 regex = r"\{[^{}]*?(\{.*?\})?[^{}]*?\}"
@@ -113,6 +174,55 @@ for match in matches:
     jobInfos[int(block['Proc'])]['end_time'] = date
     jobInfos[int(block['Proc'])]['reason'] = block['HoldReason']    
     jobInfos[int(block['Proc'])]['status'] = 'held'
+
+# process resubmits
+resubmits = 0
+for resubmit_cluster,procs_list in job.resubmits:
+  regex = r"\{[^{}]*?(\{.*?\})?[^{}]*?\}"
+  wait_command = 'condor_wait -echo:JSON -wait 0 '+args.jobDir+'/log_'+resubmit_cluster+'.txt'
+  try:
+    output = subprocess.check_output(wait_command, shell=True)
+  except subprocess.CalledProcessError as e:
+    output = e.output
+  resubmits += 1
+  matches = re.finditer(regex, output.decode('utf-8'), re.MULTILINE | re.DOTALL)
+  for match in matches:
+    block = json.loads(match.group(0))
+    date = time.strptime(str(block['EventTime']), '%Y-%m-%dT%H:%M:%S')
+    t = timegm(date)
+    if not 'Proc' in block: continue # skip uninteresting
+    if not int(block['Proc']) in procs_list: continue # skip noop_jobs
+    if block['MyType'] == 'SubmitEvent':
+      jobInfos[int(block['Proc'])]['status'] = 'resubmitted'
+      jobInfos[int(block['Proc'])]['resubmitted'] += 1
+      jobInfos[int(block['Proc'])]['start_time'] = date
+      jobInfos[int(block['Proc'])].pop('end_time', None)
+      jobInfos[int(block['Proc'])]['reason'] = ''
+    if block['MyType'] == 'ExecuteEvent':
+      jobInfos[int(block['Proc'])]['status'] = 'running'
+      jobInfos[int(block['Proc'])]['reason'] = ''
+    if block['MyType'] == 'JobHeldEvent':
+      jobInfos[int(block['Proc'])]['end_time'] = date
+      jobInfos[int(block['Proc'])]['reason'] = block['HoldReason']
+      jobInfos[int(block['Proc'])]['status'] = 'held'
+    if block['MyType'] == 'JobReleaseEvent':
+      jobInfos[int(block['Proc'])]['status'] = 'released'
+    if block['MyType'] == 'JobTerminatedEvent':
+      if block['TotalReceivedBytes'] == 0.0: continue
+      jobInfos[int(block['Proc'])]['end_time'] = date
+      if block['TerminatedNormally']: jobInfos[int(block['Proc'])]['status'] = 'finished'
+      else: jobInfos[int(block['Proc'])]['status'] = 'failed'
+    if block['MyType'] == 'FileTransferEvent' and block['Type'] == 6:
+      jobInfos[int(block['Proc'])]['end_time'] = date
+      jobInfos[int(block['Proc'])]['status'] = 'transferred'
+    if block['MyType'] == 'ShadowExceptionEvent':
+      jobInfos[int(block['Proc'])]['end_time'] = date
+      jobInfos[int(block['Proc'])]['status'] = 'exception!'
+      jobInfos[int(block['Proc'])]['reason'] = block['Message']
+    if block['MyType'] == 'JobAbortedEvent':
+      jobInfos[int(block['Proc'])]['end_time'] = date
+      jobInfos[int(block['Proc'])]['reason'] = block['Reason']
+      jobInfos[int(block['Proc'])]['status'] = 'aborted'
 
 # look in output area for output files
 subdirs = (subprocess.getoutput('eos root://cmseos.fnal.gov ls '+output_area)).split('\n')
@@ -227,40 +337,3 @@ if args.noOutput and len(noOutput_jobs) != 0:
 elif args.noOutput:
   print("No jobs finished without output")
 
-# make list of procs to resubmit
-if not args.resubmit: raise SystemExit()
-procs = []
-for a, b in re.findall(r'(\d+)-?(\d*)', args.resubmit):
-  procs.extend(range(int(a), int(a)+1 if b=='' else int(b)+1))
-procs_string = ''
-for p in procs:
-  procs_string += str(p)+','
-procs_string = procs_string[:-1]
-
-# create new submit jdl
-batchName = "resub_for_"+str(job.cluster)
-with open(args.jobDir+'/'+submit_filename) as f:
-  with open('submit_resubmit.jdl', 'w') as s:
-    submit_string = f.readlines()
-    queue_statment = submit_string.pop()
-    submit_string.append("\nJobBatchName = " + batchName+"\n")
-    submit_string.append('\nnoop_job = !stringListMember("$(Process)","'+procs_string+'")\n')
-    submit_string.append(queue_statment+'\n')
-    s.writelines(submit_string)
-print(submit_string)
-os.system('cp '+args.jobDir+'/queue.dat .')
-
-# move/delete old output
-
-# submit the job
-proc = subprocess.Popen('condor_submit submit_resubmit.jdl', stdout=subprocess.PIPE, shell=True)
-(out, err) = proc.communicate()
-out = ((out.decode('utf-8')).split('\n'))[1]
-cluster = (out.split()[-1])[:-1]
-print(cluster)
-
-# update job_info.py
-with open(args.jobDir+'/job_info.py', 'a') as f:
-  f.write("resubmits.append(('"+str(cluster)+"',["+procs_string+"]))\n")
-os.system('mv submit_resubmit.jdl '+args.jobDir+'/'+'resubmit_'+str(cluster)+'.jdl')
-os.system('rm queue.dat')
