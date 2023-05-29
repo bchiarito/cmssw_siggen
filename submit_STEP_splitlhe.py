@@ -18,6 +18,7 @@ job_dir = 'Job_'+job_name
 splitting = args.split
 output_eos = '/store/user/'+griduser_id+'/siggen/splitlhe/'+args.run_name
 submit_jdl_filename = 'submit_STEP_splitlhe.jdl'
+if args.input_jobdir[-1] == '/': args.input_jobdir = args.input_jobdir[:-1]
 
 # find lhe step output area
 loc = "."
@@ -63,5 +64,6 @@ os.system('condor_submit '+submit_jdl_filename)
 # finish
 with open('job_info.py', 'w') as f:
   f.write('output = "'+output_eos+'/"\n')  
+  f.write('splitting = '+str(splitting)+'\n')  
 os.system('mv job_info.py '+job_dir)
 os.system('rm '+submit_jdl_filename)

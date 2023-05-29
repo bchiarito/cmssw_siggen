@@ -12,6 +12,8 @@ parser.add_argument('input_jobdir', help='jobdir of mini step')
 parser.add_argument('-m', '--max', type=int, default=250, help='max_materialize (default 250)')
 args = parser.parse_args()
 
+if args.input_jobdir[-1] == '/': args.input_jobdir = args.input_jobdir[:-1]
+
 # find mini step output area
 loc = "."
 dirs = []

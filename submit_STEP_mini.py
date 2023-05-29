@@ -16,6 +16,7 @@ job_name = args.run_name+'_STEP_mini'
 job_dir = 'Job_'+job_name
 output_eos = '/store/user/'+griduser_id+'/siggen/mini/'+args.run_name
 submit_jdl_filename = 'submit_STEP_mini.jdl'
+if args.input_jobdir[-1] == '/': args.input_jobdir = args.input_jobdir[:-1]
 
 # find lhe step output area
 loc = "."
@@ -28,6 +29,7 @@ jobDir = dirs[0]
 sys.path.append(jobDir)
 import job_info as job
 input_lhe_location = job.output
+splitting = job.splitting
 
 # make job directory
 os.system('mkdir '+job_dir)
@@ -77,11 +79,17 @@ queue LHEBASE, FILE_NUM, OUTPUT_EOS from queue.dat
 os.system('cp '+submit_jdl_filename + ' ' + job_dir)
 
 # submit
-os.system('condor_submit '+submit_jdl_filename)
+proc = subprocess.Popen('condor_submit '+submit_jdl_filename, stdout=subprocess.PIPE, shell=True)
+(out, err) = proc.communicate()
+out = ((out.decode('utf-8')).split('\n'))[1]
+cluster = (out.split()[-1])[:-1]
 
 # finish
 with open('job_info.py', 'w') as f:
   f.write('output = "'+output_eos+'/"\n')  
+  f.write('cluster = '+cluster+'\n')  
+  f.write('splitting = '+str(splitting)+'\n')
+  f.write('resubmits = []\n')
 os.system('mv job_info.py '+job_dir)
-os.system('rm '+submit_jdl_filename)
+os.system('mv '+submit_jdl_filename+' '+job_dir)
 os.system('rm queue.dat')
