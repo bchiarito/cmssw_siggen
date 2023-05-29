@@ -83,6 +83,7 @@ proc = subprocess.Popen('condor_submit '+submit_jdl_filename, stdout=subprocess.
 (out, err) = proc.communicate()
 out = ((out.decode('utf-8')).split('\n'))[1]
 cluster = (out.split()[-1])[:-1]
+print(cluster)
 
 # finish
 with open('job_info.py', 'w') as f:
