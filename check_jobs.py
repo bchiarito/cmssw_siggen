@@ -140,9 +140,10 @@ try:
 except subprocess.CalledProcessError as e:
   wait_output = e.output
 matches = re.finditer(regex, wait_output.decode('utf-8'), re.MULTILINE | re.DOTALL)
-for match in matches:
+for i, match in enumerate(matches):
   block = json.loads(match.group(0))
   date = time.strptime(str(block['EventTime']), '%Y-%m-%dT%H:%M:%S')
+  if i == 0: first_date = time.strptime(str(block['EventTime']), '%Y-%m-%dT%H:%M:%S')
   t = timegm(date)
   if block['MyType'] == 'SubmitEvent':
     jobInfos[int(block['Proc'])]['resubmitted'] = 0
@@ -223,12 +224,14 @@ for resubmit_cluster,procs_list in job.resubmits:
       jobInfos[int(block['Proc'])]['end_time'] = date
       jobInfos[int(block['Proc'])]['reason'] = block['Reason']
       jobInfos[int(block['Proc'])]['status'] = 'aborted'
+total_time = str(datetime.timedelta(seconds = timegm(date) - timegm(first_date)))
 
 # look in output area for output files
 subdirs = (subprocess.getoutput('eos root://cmseos.fnal.gov ls '+output_area)).split('\n')
 for dir in subdirs:
   #print(dir)
   ls_output = subprocess.getoutput('eos root://cmseos.fnal.gov ls -lh '+output_area+'/'+dir)
+  #print(ls_output)
   for line in ls_output.split('\n'):
     l = line.split()
     if len(l) <= 6: continue
@@ -246,6 +249,7 @@ for dir in subdirs:
       if proc < 0: continue
       jobInfos[proc]['size'] = size
     except (IndexError, ValueError):
+      print(line)
       print("WARNING: got IndexError or ValueError, may want to check output area directly with (eos) ls.")
       continue
 
@@ -256,7 +260,7 @@ for dir in subdirs:
 #    print("  ", item, "=", jobInfo[item])
 
 # display information
-print("Results for ClusterId", cluster)
+print("Results for ClusterId", cluster, "| total time", total_time)
 for count, resubmit_cluster in enumerate(job.resubmits):
   print("  Resubmit", count+1, "ClusterId", resubmit_cluster[0])
 if not args.summary and not args.aborted and not args.noOutput:
