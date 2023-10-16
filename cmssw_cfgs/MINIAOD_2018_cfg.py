@@ -2,7 +2,7 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: step6 --filein file:RECO.root --fileout file:MiniAOD.root --mc --eventcontent MINIAODSIM --runUnscheduled --datatier MINIAODSIM --conditions 106X_upgrade2018_realistic_v15_L1v1 --step PAT --nThreads 8 --geometry DB:Extended --era Run2_2018 --python_filename MINIAOD_2018_cfg.py -n -1 --no_exec
+# with command line options: miniaod --filein file:RECO.root --fileout file:MiniAOD.root --mc --eventcontent MINIAODSIM --runUnscheduled --datatier MINIAODSIM --conditions 106X_upgrade2018_realistic_v16_L1v1 --step PAT --nThreads 8 --geometry DB:Extended --era Run2_2018 --python_filename MINIAOD_2018_cfg.py -n -1 --no_exec --procModifiers run2_miniAOD_UL
 import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ("python")
@@ -12,7 +12,9 @@ options.setDefault("outputFile", "file:MiniAOD.root")
 options.parseArguments()
 from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
 
-process = cms.Process('PAT',Run2_2018)
+from Configuration.ProcessModifiers.run2_miniAOD_UL_cff import run2_miniAOD_UL
+
+process = cms.Process('PAT',Run2_2018,run2_miniAOD_UL)
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
@@ -43,7 +45,7 @@ process.options = cms.untracked.PSet(
 
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
-    annotation = cms.untracked.string('step6 nevts:-1'),
+    annotation = cms.untracked.string('miniaod nevts:-1'),
     name = cms.untracked.string('Applications'),
     version = cms.untracked.string('$Revision: 1.19 $')
 )
@@ -120,7 +122,7 @@ process.MINIAODSIMoutput = cms.OutputModule("PoolOutputModule",
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v15_L1v1', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v16_L1v1', '')
 
 # Path and EndPath definitions
 process.Flag_trackingFailureFilter = cms.Path(process.goodVertices+process.trackingFailureFilter)
