@@ -35,6 +35,7 @@ except ImportError as err:
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("jobDir",help="the job directory")
 parser.add_argument("-s", "--summary", default=False, action="store_true",help="do not print one line per job, instead summarize number of jobs with each status type")
+parser.add_argument("-v", "--verbose", default=False, action="store_true",help="")
 parser.add_argument("--onlyFinished", default=False, action="store_true",help="ignore 'running' and 'submitted' job Ids")
 parser.add_argument("--notFinished", default=False, action="store_true",help="ignore 'finished' job Ids")
 parser.add_argument("--onlyError", default=False, action="store_true",help="ignore 'running', 'submitted', and 'finished, job Ids")
@@ -245,12 +246,14 @@ for dir in subdirs:
       c = dir.rfind('C')
       C = int(dir[c+1:])
       proc = CStoproc(C, S)
+      #print(C, S, proc)
       if proc >= procs: continue
       if proc < 0: continue
       jobInfos[proc]['size'] = size
     except (IndexError, ValueError):
-      print(line)
-      print("WARNING: got IndexError or ValueError, may want to check output area directly with (eos) ls.")
+      if args.verbose:
+        print("LINE:", line)
+        print("WARNING: got IndexError or ValueError, may want to check output area directly with (eos) ls.")
       continue
 
 # debug jobInfos dictionary
