@@ -227,13 +227,20 @@ for resubmit_cluster,procs_list in job.resubmits:
       jobInfos[int(block['Proc'])]['status'] = 'aborted'
 total_time = str(datetime.timedelta(seconds = timegm(date) - timegm(first_date)))
 
+
+def ls_sort(item):
+    match = re.search(r'\d+(?=\.[a-zA-Z]+)', item)
+    if match: return int(match.group())
+    else: return float('inf')
+
 # look in output area for output files
 subdirs = (subprocess.getoutput('eos root://cmseos.fnal.gov ls '+output_area)).split('\n')
 for dir in subdirs:
   #print(dir)
-  ls_output = subprocess.getoutput('eos root://cmseos.fnal.gov ls -lh '+output_area+'/'+dir)
+  ls_output = (subprocess.getoutput('eos root://cmseos.fnal.gov ls -lh '+output_area+'/'+dir)).split('\n')
+  ls_output.sort(key=ls_sort)
   #print(ls_output)
-  for line in ls_output.split('\n'):
+  for line in ls_output:
     l = line.split()
     if len(l) <= 6: continue
     try:
@@ -246,7 +253,7 @@ for dir in subdirs:
       c = dir.rfind('C')
       C = int(dir[c+1:])
       proc = CStoproc(C, S)
-      #print(C, S, proc)
+      #print(C, S, "to", proc)
       if proc >= procs: continue
       if proc < 0: continue
       jobInfos[proc]['size'] = size

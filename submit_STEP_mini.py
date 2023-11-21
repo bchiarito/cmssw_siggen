@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import os
+import re
 import subprocess
 import argparse
 
@@ -35,9 +36,22 @@ splitting = job.splitting
 os.system('mkdir '+job_dir)
 os.system('mkdir -p '+job_dir+'/stdout/')
 
+def ls_sort(item):
+    match = re.search(r'\d+(?=\.[a-zA-Z]+)', item)
+    if match: return int(match.group())
+    else: return float('inf')
+
 # generate condor queue data
 with open('queue.dat', 'w') as f:
   remote_split_lhes = (subprocess.getoutput("xrdfs root://cmseos.fnal.gov ls " + input_lhe_location)).split('\n')
+  remote_split_lhes.sort(key=ls_sort)
+
+  #remote_split_lhes = remote_split_lhes[:30]
+  #for file in remote_split_lhes:
+    #print(file)
+    #print(ls_sort(file))
+  #sys.exit()
+
   for file in remote_split_lhes:
     x = file.rfind('_')
     y = file.rfind('.')
