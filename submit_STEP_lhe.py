@@ -6,7 +6,8 @@ import sys
 import os
 import subprocess
 
-griduser_id = (subprocess.check_output("voms-proxy-info --identity", shell=True).decode('utf-8')).split('/')[5][3:]
+#griduser_id = (subprocess.check_output("voms-proxy-info --identity", shell=True).decode('utf-8')).split('/')[5][3:]
+griduser_id = (subprocess.check_output("whoami").decode('utf-8')).strip()
 
 # command line options
 import argparse
