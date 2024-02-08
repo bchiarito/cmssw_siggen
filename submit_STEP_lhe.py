@@ -18,8 +18,10 @@ parser.add_argument('phi_num', type=int, help='number of steps in phi dimension'
 parser.add_argument('omega_num', type=int, help='number of steps in omega dimension')
 parser.add_argument('ev_per_point', type=int, help='number of events at each mass point')
 parser.add_argument('-m', '--max', type=int, default=250, help='max_materialize (default 250)')
-parser.add_argument('--omega_low', type=float, help='replace default (0.25 GeV) omega low')
+parser.add_argument('--omega_low', type=float, help='replace default (0.4 GeV) omega low')
+parser.add_argument('--omega_high', type=float, help='replace default (10 GeV) omega high')
 parser.add_argument('--phi_low', type=int, help='replace default (100 GeV) phi low')
+parser.add_argument('--phi_high', type=int, help='replace default (5000 GeV) phi high')
 args = parser.parse_args()
 
 # settings
@@ -32,11 +34,13 @@ num_per_mass_point = args.ev_per_point
 max_materialize = args.max
 parameters_file = 'options.txt'
 phi_low = 100
-phi_high = 6000
+phi_high = 5000
 omega_low = 0.4
 omega_high = 10
 if args.omega_low: omega_low = args.omega_low
+if args.omega_high: omega_low = args.omega_high
 if args.phi_low: phi_low = args.phi_low
+if args.phi_high: phi_high = args.phi_high
 phi_step = int(round((phi_high - phi_low)/phi_num))
 omega_step = (omega_high - omega_low)/omega_num
 if omega_num == 1: omega_step = omega_high
