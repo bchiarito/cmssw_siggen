@@ -96,7 +96,8 @@ PU_file = random.choice(PU_files)
 #os.system('xrdcp root://cmsxrootd.fnal.gov/'+str.rstrip(PU_file)+' ./premix.root')
 #process.mixData.input.fileNames = cms.untracked.vstring(['file:premix.root'])
 
-process.mixData.input.fileNames = cms.untracked.vstring(['file:root://cmsxrootd.fnal.gov/'+PU_file])
+#process.mixData.input.fileNames = cms.untracked.vstring(['file:root://cmsxrootd.fnal.gov/'+PU_file])
+process.mixData.input.fileNames = cms.untracked.vstring(['file:root://cms-xrd-global.cern.ch/'+PU_file])
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v15_L1v1', '')
 
