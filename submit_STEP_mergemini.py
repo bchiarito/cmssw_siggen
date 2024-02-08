@@ -67,5 +67,10 @@ os.system('cp queue.dat '+job_dir)
 os.system('cp '+submit_file+' '+job_dir)
 os.system('condor_submit '+submit_file)
 
+# finish
+with open('job_info.py', 'w') as f:
+  f.write('output = "'+output_directory+'/"\n')  
+os.system('mv job_info.py '+job_dir)
 os.system('rm '+submit_file)
 os.system('rm queue.dat')
+
