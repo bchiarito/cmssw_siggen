@@ -47,12 +47,13 @@ parser.add_argument("-r", "--resubmit", type=str, help="list of job IDs to resub
 args = parser.parse_args()
 
 # import job
-sys.path.append(args.jobDir)
+inputjobdir = os.path.normpath(args.jobDir)
+sys.path.append(inputjobdir)
 import job_info as job
 output_area = job.output
 cluster = str(job.cluster)
 splitting = int(job.splitting)
-with open(args.jobDir+'queue.dat') as q:
+with open(inputjobdir+'/queue.dat') as q:
   procs = len(q.readlines())
 
 def itoMP(i):
@@ -83,7 +84,7 @@ if args.resubmit:
 
   # create new submit jdl
   batchName = "resub_for_"+str(job.cluster)
-  with open(args.jobDir+'/'+submit_filename) as f:
+  with open(inputjobdir+'/'+submit_filename) as f:
     with open('submit_resubmit.jdl', 'w') as s:
       submit_string = f.readlines()
       queue_statment = submit_string.pop()
@@ -92,7 +93,7 @@ if args.resubmit:
       submit_string.append(queue_statment+'\n')
       s.writelines(submit_string)
   #print(submit_string)
-  os.system('cp '+args.jobDir+'/queue.dat .')
+  os.system('cp '+inputjobdir+'/queue.dat .')
 
   # delete old output
   subdirs = (subprocess.getoutput('eos root://cmseos.fnal.gov ls '+output_area)).split('\n')
@@ -125,9 +126,9 @@ if args.resubmit:
   cluster = (out.split()[-1])[:-1]
 
   # update job_info.py
-  with open(args.jobDir+'/job_info.py', 'a') as f:
+  with open(inputjobdir+'/job_info.py', 'a') as f:
     f.write("resubmits.append(('"+str(cluster)+"',["+procs_string+"]))\n")
-  os.system('mv submit_resubmit.jdl '+args.jobDir+'/'+'resubmit_'+str(cluster)+'.jdl')
+  os.system('mv submit_resubmit.jdl '+inputjobdir+'/'+'resubmit_'+str(cluster)+'.jdl')
   os.system('rm queue.dat')
   
   raise SystemExit('Finished resubmitting cluster ID '+str(cluster))
@@ -135,7 +136,7 @@ if args.resubmit:
 # loop over logs and get proc statuses
 jobInfos = [{} for i in range(procs)]
 regex = r"\{[^{}]*?(\{.*?\})?[^{}]*?\}"
-wait_command = 'condor_wait -echo:JSON -wait 0 '+args.jobDir+'/log_'+cluster+'.txt'
+wait_command = 'condor_wait -echo:JSON -wait 0 '+inputjobdir+'/log_'+cluster+'.txt'
 try:
   wait_output = subprocess.check_output(wait_command, shell=True)
 except subprocess.CalledProcessError as e:
@@ -181,7 +182,7 @@ for i, match in enumerate(matches):
 resubmits = 0
 for resubmit_cluster,procs_list in job.resubmits:
   regex = r"\{[^{}]*?(\{.*?\})?[^{}]*?\}"
-  wait_command = 'condor_wait -echo:JSON -wait 0 '+args.jobDir+'/log_'+resubmit_cluster+'.txt'
+  wait_command = 'condor_wait -echo:JSON -wait 0 '+inputjobdir+'/log_'+resubmit_cluster+'.txt'
   try:
     output = subprocess.check_output(wait_command, shell=True)
   except subprocess.CalledProcessError as e:
