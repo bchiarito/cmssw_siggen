@@ -329,24 +329,32 @@ if args.summary:
     print('{:<15} | {}'.format(str(status), str(summary[status])))
 
 if args.aborted and len(aborted_jobs) != 0:
-  x = 0
+  sys.stdout.write(str(aborted_jobs[0]))
+  x = 1
   while x < len(aborted_jobs):
-      if x == len(aborted_jobs) - 1:
-          sys.stdout.write(str(aborted_jobs[x]))
-          break
-      sys.stdout.write(str(aborted_jobs[x]) + ",")
+      if aborted_jobs[x] == aborted_jobs[x-1] + 1:
+          while x < len(aborted_jobs) and aborted_jobs[x] == aborted_jobs[x-1] + 1:
+              x += 1
+          sys.stdout.write("-"+str(aborted_jobs[x-1]))
+          if x == len(aborted_jobs):
+              break
+      sys.stdout.write(","+str(aborted_jobs[x]))
       x += 1
   sys.stdout.write("\n")
 elif args.aborted:
   print("No jobs were aborted")
 
 if args.noOutput and len(noOutput_jobs) != 0:
-  x = 0
+  sys.stdout.write(str(noOutput_jobs[0]))
+  x = 1
   while x < len(noOutput_jobs):
-      if x == len(noOutput_jobs) - 1:
-          sys.stdout.write(str(noOutput_jobs[x]))
-          break
-      sys.stdout.write(str(noOutput_jobs[x]) + ",")
+      if noOutput_jobs[x] == noOutput_jobs[x-1] + 1:
+          while x < len(noOutput_jobs) and noOutput_jobs[x] == noOutput_jobs[x-1] + 1:
+              x += 1
+          sys.stdout.write("-"+str(noOutput_jobs[x-1]))
+          if x == len(noOutput_jobs):
+              break
+      sys.stdout.write(","+str(noOutput_jobs[x]))
       x += 1
   sys.stdout.write("\n")
 elif args.noOutput:
