@@ -85,7 +85,7 @@ request_memory = 4000
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 max_materialize = {}
-INPUT_LHE = $(LHEBASE)_$(FILE_NUM).lhe
+INPUT_LHE = root://cmseos.fnal.gov//$(LHEBASE)_$(FILE_NUM).lhe
 JobBatchName = {}
 
 queue LHEBASE, FILE_NUM, OUTPUT_EOS from queue.dat
