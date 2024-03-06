@@ -55,12 +55,13 @@ cluster = str(job.cluster)
 splitting = int(job.splitting)
 with open(inputjobdir+'/queue.dat') as q:
   procs = len(q.readlines())
+num_Cs = int(procs/splitting) # number of source lhes
 
 def itoMP(i):
   return int((i - (i % splitting))/splitting)
 
 def CStoproc(C, S):
-  return int(C*splitting + S)
+  return int(S*num_Cs + C)
 
 # get the schedd
 if site == 'cmslpc':
