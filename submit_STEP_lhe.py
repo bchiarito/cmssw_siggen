@@ -38,17 +38,23 @@ phi_high = 5000
 omega_low = 0.4
 omega_high = 10
 if args.omega_low: omega_low = args.omega_low
-if args.omega_high: omega_low = args.omega_high
+if args.omega_high: omega_high = args.omega_high
 if args.phi_low: phi_low = args.phi_low
 if args.phi_high: phi_high = args.phi_high
-phi_step = int(round((phi_high - phi_low)/phi_num))
-omega_step = (omega_high - omega_low)/omega_num
 if omega_num == 1: omega_step = omega_high
+else: 
+  omega_step = round((omega_high - omega_low)/(omega_num-1),4)
+  omega_high += omega_step
 if phi_num == 1: phi_step = phi_high
+else: 
+  phi_step = int(round((phi_high - phi_low)/(phi_num-1)))
+  phi_high += phi_step
 
 # summary
-print('Phi from', phi_low, 'to', phi_high, 'in steps of', phi_step)
-print('omega from', omega_low, 'to', omega_high, 'in steps of', omega_step)
+if phi_num == 1: print('Phi =', phi_low)
+else: print('Phi from', phi_low, 'to', phi_high-phi_step, 'in steps of', phi_step)
+if omega_num == 1: print('omega =', omega_low)
+else: print('omega from', omega_low, 'to', omega_high-omega_step, 'in steps of', omega_step)
 response = input("Continue? [Enter] to proceed, q to quit: ")
 if response == 'q':
   print("Quitting.")
