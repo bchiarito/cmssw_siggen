@@ -11,6 +11,7 @@ griduser_id = (subprocess.check_output("whoami").decode('utf-8')).strip()
 parser = argparse.ArgumentParser()
 parser.add_argument('run_name', help='name for output eos area')
 parser.add_argument('input_jobdir', help='job directory for splitlhe step')
+parser.add_argument('-y', '--year', type=str, default="2018", choices=['2018','2017','2016'], help='year')
 parser.add_argument('-m', '--max', type=int, default=250, help='max_materialize (default 250)')
 args = parser.parse_args()
 
@@ -71,25 +72,25 @@ os.system('cp queue.dat ' + job_dir)
 with open(submit_jdl_filename, 'w') as f:
   f.write(
 """universe = vanilla
-initialdir = {}
+initialdir = {0:}
 #use_x509userproxy = true
 #x509userproxy         = $ENV(X509_USER_PROXY)
 error  = stdout/$(Cluster)_$(Process)_out.txt
 output = stdout/$(Cluster)_$(Process)_out.txt
 log    = log_$(Cluster).txt
 executable = execute_STEP_mini.sh
-transfer_input_files = ../cmssw_cfgs/GEN_2018_cfg.py, ../cmssw_cfgs/SIM_2018_cfg.py, ../cmssw_cfgs/DIGIPremix_2018_cfg.py, ../cmssw_cfgs/HLT_2018_cfg.py, ../cmssw_cfgs/RECO_2018_cfg.py, ../cmssw_cfgs/MINIAOD_2018_cfg.py, ../cmssw_cfgs/Premix_RunIISummer20ULPrePremix-UL18_106X_upgrade2018_realistic_v11_L1v1-v2.list
-arguments = $(FILE_NUM) 2018 90000054 -1 root://cmseos.fnal.gov/$(OUTPUT_EOS) $(INPUT_LHE)
+transfer_input_files = ../cmssw_cfgs/GEN_{1:}_cfg.py, ../cmssw_cfgs/SIM_{1:}_cfg.py, ../cmssw_cfgs/DIGIPremix_{1:}_cfg.py, ../cmssw_cfgs/HLT_{1:}_cfg.py, ../cmssw_cfgs/RECO_{1:}_cfg.py, ../cmssw_cfgs/MINIAOD_{1:}_cfg.py, ../cmssw_cfgs/Premix_{1:}.list
+arguments = $(FILE_NUM) {1:} 90000054 -1 root://cmseos.fnal.gov/$(OUTPUT_EOS) $(INPUT_LHE)
 Notification = never
 request_memory = 4000
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-max_materialize = {}
+max_materialize = {2:}
 INPUT_LHE = root://cmseos.fnal.gov//$(LHEBASE)_$(FILE_NUM).lhe
-JobBatchName = {}
+JobBatchName = {3:}
 
 queue LHEBASE, FILE_NUM, OUTPUT_EOS from queue.dat
-""".format(job_dir, str(args.max), job_name)
+""".format(job_dir, args.year, str(args.max), job_name)
 )
 os.system('cp '+submit_jdl_filename + ' ' + job_dir)
 

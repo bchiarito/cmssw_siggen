@@ -20,10 +20,12 @@ printf "\n$5 : outputDir to xrdcp to\n"
 printf "\n$6 : name of lhe\n"
 
 #GEN, SIM, DIGI
-eval `scramv1 project CMSSW CMSSW_10_6_20`
-cd CMSSW_10_6_20/src
+eval `scramv1 project CMSSW CMSSW_10_6_20_patch1`
+cd CMSSW_10_6_20_patch1/src
 eval `scramv1 runtime -sh`
+echo $SCRAM_ARCH
 cd ${_CONDOR_SCRATCH_DIR}
+ls
 pwd
 
 printf "\n\nDoing LHE > GEN\n"
@@ -31,6 +33,18 @@ cmsRun GEN_$2_cfg.py inputFile=$6 hadronizer=$3 numEvents=$4
 ls
 
 printf "\n\nDoing GEN > SIM\n"
+if [[ "$2" == "2018" ]]; then
+echo "~~~ 2018"
+elif [[ "$2" == "2017" ]]; then
+echo "~~~ 2017"
+eval `scramv1 project CMSSW CMSSW_10_6_17_patch1`
+cd CMSSW_10_6_17_patch1/src
+eval `scramv1 runtime -sh`
+cd ${_CONDOR_SCRATCH_DIR}
+pwd
+elif [[ "$2" == "2016" ]]; then
+echo "~~~ 2016"
+fi
 cmsRun SIM_$2_cfg.py
 ls
 
