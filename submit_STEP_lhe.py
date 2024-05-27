@@ -69,7 +69,7 @@ with open(parameters_file, "w") as f:
 
 # submit file
 sub = htcondor.Submit()
-sub['executable'] = 'execute_STEP_lhe.py'
+sub['executable'] = 'execute_STEP_lhe.sh'
 sub['arguments'] = '$(PHI_MASS) $(OMEGA_MASS) $(NUM_EVENT) $(DEST)'
 sub['+JobFlavor'] = 'longlunch'
 sub['Notification'] = 'Never'
