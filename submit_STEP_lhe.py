@@ -6,18 +6,17 @@ import sys
 import os
 import subprocess
 
-#griduser_id = (subprocess.check_output("voms-proxy-info --identity", shell=True).decode('utf-8')).split('/')[5][3:]
 griduser_id = (subprocess.check_output("whoami").decode('utf-8')).strip()
 
 # command line options
 import argparse
-
 parser = argparse.ArgumentParser()
 parser.add_argument('run_name', help='name for job directory and output directory')
 parser.add_argument('phi_num', type=int, help='number of steps in phi dimension')
 parser.add_argument('omega_num', type=int, help='number of steps in omega dimension')
 parser.add_argument('ev_per_point', type=int, help='number of events at each mass point')
 parser.add_argument('-m', '--max', type=int, default=250, help='max_materialize (default 250)')
+parser.add_argument('--extra', action='store_true', default=False, help='turn on generation of one extra jet')
 parser.add_argument('--omega_low', type=float, help='replace default (0.4 GeV) omega low')
 parser.add_argument('--omega_high', type=float, help='replace default (10 GeV) omega high')
 parser.add_argument('--phi_low', type=int, help='replace default (100 GeV) phi low')
@@ -51,11 +50,19 @@ else:
   phi_high += phi_step
 
 # summary
+print("Phi, omega")
+print("---")
+for phi_mass in range(int(phi_low), int(phi_high), int(phi_step)):
+    for omega_mass in range(int(omega_low*100000000), int(omega_high*100000000), int(omega_step*100000000)):
+        line = ", ".join([str(phi_mass), str(omega_mass/100000000.0)])
+        print(line)
+print("---")
 if phi_num == 1: print('Phi =', phi_low)
 else: print('Phi from', phi_low, 'to', phi_high-phi_step, 'in steps of', phi_step)
 if omega_num == 1: print('omega =', omega_low)
 else: print('omega from', omega_low, 'to', omega_high-omega_step, 'in steps of', omega_step)
-response = input("Continue? [Enter] to proceed, q to quit: ")
+print("{:,} events per mass point".format(num_per_mass_point))
+response = input("\nContinue? [Enter] to proceed, q to quit: ")
 if response == 'q':
   print("Quitting.")
   sys.exit()
@@ -70,7 +77,7 @@ with open(parameters_file, "w") as f:
 # submit file
 sub = htcondor.Submit()
 sub['executable'] = 'execute_STEP_lhe.sh'
-sub['arguments'] = '$(PHI_MASS) $(OMEGA_MASS) $(NUM_EVENT) $(DEST)'
+sub['arguments'] = '$(PHI_MASS) $(OMEGA_MASS) $(NUM_EVENT) $(DEST) {}'.format(str(args.extra))
 sub['+JobFlavor'] = 'longlunch'
 sub['Notification'] = 'Never'
 sub['use_x509userproxy'] = 'true'
@@ -82,9 +89,9 @@ sub['error'] = '$(Cluster)_$(Process)_out.txt'
 sub['log'] = 'log_$(Cluster).txt'
 sub['max_materialize'] = max_materialize
 sub['DEST'] = '/store/user/'+griduser_id+'/siggen/lhe/' + job_output + '/'
-#sub['request_memory'] = 4000
 sub['request_memory'] = 8000
 sub['JobBatchName'] = job_name
+#sub['+DesiredOS'] = '"SL7"'
 
 # job directory
 os.system('mkdir ' + job_dir)
