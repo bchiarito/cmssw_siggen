@@ -67,6 +67,7 @@ cmsRun HLT_$2_cfg.py
 ls
 
 #RECO, MINI
+eval `scramv1 project CMSSW CMSSW_10_6_20`
 cd CMSSW_10_6_20/src
 eval `scramv1 runtime -sh`
 cd ${_CONDOR_SCRATCH_DIR}

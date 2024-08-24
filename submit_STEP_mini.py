@@ -88,6 +88,7 @@ when_to_transfer_output = ON_EXIT
 max_materialize = {2:}
 INPUT_LHE = root://cmseos.fnal.gov//$(LHEBASE)_$(FILE_NUM).lhe
 JobBatchName = {3:}
++DesiredOS = "SL7"
 
 queue LHEBASE, FILE_NUM, OUTPUT_EOS from queue.dat
 """.format(job_dir, args.year, str(args.max), job_name)

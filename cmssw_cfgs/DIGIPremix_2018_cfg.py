@@ -87,7 +87,8 @@ process.PREMIXRAWoutput = cms.OutputModule("PoolOutputModule",
 # Additional output definition
 
 # Other statements
-f=open("Premix_RunIISummer20ULPrePremix-UL18_106X_upgrade2018_realistic_v11_L1v1-v2.list", "r")
+#f=open("Premix_RunIISummer20ULPrePremix-UL18_106X_upgrade2018_realistic_v11_L1v1-v2.list", "r")
+f=open("Premix_2018.list", "r")
 PU_files = f.readlines()
 f.close()
 PU_file = random.choice(PU_files)
