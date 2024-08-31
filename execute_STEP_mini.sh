@@ -1,4 +1,3 @@
-#!/bin/bash
 #! /bin/bash
 echo ">>> Starting job on" `date`
 echo ">>> Running on: `uname -a`"
@@ -29,7 +28,7 @@ ls
 pwd
 
 printf "\n\nDoing LHE > GEN\n"
-cmsRun GEN_$2_cfg.py inputFile=$6 hadronizer=$3 numEvents=$4
+cmsRun GEN_$2_cfg.py inputFile=$6 hadronizer=$3 numEvents=$4 decay=$7 forcing=$8 matching=$9
 ls
 
 printf "\n\nDoing GEN > SIM\n"

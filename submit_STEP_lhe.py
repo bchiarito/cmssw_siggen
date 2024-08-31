@@ -5,6 +5,7 @@ import htcondor
 import sys
 import os
 import subprocess
+import string
 
 griduser_id = (subprocess.check_output("whoami").decode('utf-8')).strip()
 
@@ -15,12 +16,10 @@ parser.add_argument('run_name', help='name for job directory and output director
 parser.add_argument('phi_num', type=int, help='number of steps in phi dimension')
 parser.add_argument('omega_num', type=int, help='number of steps in omega dimension')
 parser.add_argument('ev_per_point', type=int, help='number of events at each mass point')
+#parser.add_argument('--extra', action='store_true', default=False, help='turn on generation of one extra jet')
+parser.add_argument('--phi_range', type=str, action='store', metavar='LOW,HIGH', help='range in low,hgh format')
+parser.add_argument('--omega_range', type=str, action='store', metavar='LOW,HIGH', help='range in low,high format')
 parser.add_argument('-m', '--max', type=int, default=250, help='max_materialize (default 250)')
-parser.add_argument('--extra', action='store_true', default=False, help='turn on generation of one extra jet')
-parser.add_argument('--omega_low', type=float, help='replace default (0.4 GeV) omega low')
-parser.add_argument('--omega_high', type=float, help='replace default (10 GeV) omega high')
-parser.add_argument('--phi_low', type=int, help='replace default (100 GeV) phi low')
-parser.add_argument('--phi_high', type=int, help='replace default (5000 GeV) phi high')
 args = parser.parse_args()
 
 # settings
@@ -36,10 +35,17 @@ phi_low = 100
 phi_high = 5000
 omega_low = 0.4
 omega_high = 10
-if args.omega_low: omega_low = args.omega_low
-if args.omega_high: omega_high = args.omega_high
-if args.phi_low: phi_low = args.phi_low
-if args.phi_high: phi_high = args.phi_high
+
+if args.phi_range:
+    comma = args.phi_range.index(',')
+    phi_low = float(args.phi_range[0:comma])
+    phi_high = float(args.phi_range[comma+1:len(args.phi_range)])
+
+if args.omega_range:
+    comma = args.omega_range.index(',')
+    omega_low = float(args.omega_range[0:comma])
+    omega_high = float(args.omega_range[comma+1:len(args.omega_range)])
+
 if omega_num == 1: omega_step = omega_high
 else: 
   omega_step = round((omega_high - omega_low)/(omega_num-1),4)

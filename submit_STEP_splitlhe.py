@@ -8,18 +8,21 @@ import argparse
 griduser_id = (subprocess.check_output("whoami").decode('utf-8')).strip()
 
 parser = argparse.ArgumentParser()
-parser.add_argument('run_name', help='name for output eos area')
+parser.add_argument('-r', '--runname', help='name for output eos area')
 parser.add_argument('input_jobdir', help='job directory for lhe step')
 parser.add_argument('-s', '--split', type=int, default=1, help='split each lhe into this many subjobs')
 parser.add_argument('-m', '--max', type=int, default=250, help='max_materialize (default 250)')
 args = parser.parse_args()
 
-job_name = args.run_name+'_STEP_splitlhe'
+
+if args.input_jobdir[-1] == '/': args.input_jobdir = args.input_jobdir[:-1]
+if not args.runname: run_name = args.input_jobdir.replace('Job_','').replace('_STEP_lhe','')
+else: run_name = args.runname
+job_name = run_name+'_STEP_splitlhe'
 job_dir = 'Job_'+job_name
 splitting = args.split
-output_eos = '/store/user/'+griduser_id+'/siggen/splitlhe/'+args.run_name
+output_eos = '/store/user/'+griduser_id+'/siggen/splitlhe/'+run_name
 submit_jdl_filename = 'submit_STEP_splitlhe.jdl'
-if args.input_jobdir[-1] == '/': args.input_jobdir = args.input_jobdir[:-1]
 
 # find lhe step output area
 loc = "."
@@ -55,7 +58,7 @@ max_materialize = {}
 JobBatchName = {}
 
 queue
-""".format(job_dir, input_lhe_location, output_eos, args.run_name, str(splitting), str(args.max), job_name)
+""".format(job_dir, input_lhe_location, output_eos, run_name, str(splitting), str(args.max), job_name)
 )
 os.system('cp '+submit_jdl_filename + ' ' + job_dir)
 
