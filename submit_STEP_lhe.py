@@ -16,7 +16,7 @@ parser.add_argument('run_name', help='name for job directory and output director
 parser.add_argument('phi_num', type=int, help='number of steps in phi dimension')
 parser.add_argument('omega_num', type=int, help='number of steps in omega dimension')
 parser.add_argument('ev_per_point', type=int, help='number of events at each mass point')
-#parser.add_argument('--extra', action='store_true', default=False, help='turn on generation of one extra jet')
+parser.add_argument('--extra', action='store_true', default=False, help='turn on generation of one extra jet')
 parser.add_argument('--phi_range', type=str, action='store', metavar='LOW,HIGH', help='range in low,hgh format')
 parser.add_argument('--omega_range', type=str, action='store', metavar='LOW,HIGH', help='range in low,high format')
 parser.add_argument('-m', '--max', type=int, default=250, help='max_materialize (default 250)')
@@ -58,9 +58,10 @@ else:
 # summary
 print("Phi, omega")
 print("---")
+poweroften = 10000
 for phi_mass in range(int(phi_low), int(phi_high), int(phi_step)):
-    for omega_mass in range(int(omega_low*100000000), int(omega_high*100000000), int(omega_step*100000000)):
-        line = ", ".join([str(phi_mass), str(omega_mass/100000000.0)])
+    for omega_mass in range(int(omega_low*poweroften), int(omega_high*poweroften), int(omega_step*poweroften)):
+        line = ", ".join([str(phi_mass), str(omega_mass/float(poweroften))])
         print(line)
 print("---")
 if phi_num == 1: print('Phi =', phi_low)
