@@ -23,7 +23,7 @@ for count, file in enumerate(list_of_lhes):
   if splitting == 1:
     os.system('xrdcp ' + local_lhe_filename + ' root://cmseos.fnal.gov/'+args.output_loc+'/'+local_lhe_filename[:-4]+'_C'+str(count)+'_0.lhe')
   elif splitting > 1:
-    command = 'python splitLHE.py ' + local_lhe_filename + ' ' + local_lhe_filename[:-4]+'_C'+str(count)+'_ '+str(splitting)
+    command = 'python3 splitLHE.py ' + local_lhe_filename + ' ' + local_lhe_filename[:-4]+'_C'+str(count)+'_ '+str(splitting)
     print(command)
     os.system(command)
     for i in range(splitting):

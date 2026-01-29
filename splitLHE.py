@@ -1,5 +1,6 @@
-#!/usr/bin/python
- 
+#! /usr/bin/python3
+
+from __future__ import print_function
 import sys
 import re
  
@@ -22,7 +23,7 @@ else:
   parser.add_argument("nFiles",help="Number of files N to split the events between",type=int)
  
   args = parser.parse_args()
-  print args
+  print(args)
  
 if args.nFiles < 2:
   print("Error: nFiles must be > 1")
@@ -52,7 +53,7 @@ for line in fin:
     init = True
  
 eventsTotal = eventNum
-print "N Events Total: %i" % eventsTotal
+print("N Events Total: %i" % eventsTotal)
  
 files = []
 maxEventsFile = []

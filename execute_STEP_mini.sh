@@ -28,7 +28,8 @@ ls
 pwd
 
 printf "\n\nDoing LHE > GEN\n"
-cmsRun GEN_$2_cfg.py inputFile=$6 hadronizer=$3 numEvents=$4 decay=$7 forcing=$8 matching=$9
+#cmsRun GEN_$2_cfg.py inputFile=$6 hadronizer=$3 numEvents=$4 decay=$7 forcing=$8 matching=$9
+cmsRun GEN_$2_cfg.py inputFile=$6 hadronizer=$3 numEvents=$4
 ls
 
 printf "\n\nDoing GEN > SIM\n"

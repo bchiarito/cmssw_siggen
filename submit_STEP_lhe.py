@@ -20,6 +20,7 @@ parser.add_argument('--extra', action='store_true', default=False, help='turn on
 parser.add_argument('--phi_range', type=str, action='store', metavar='LOW,HIGH', help='range in low,hgh format')
 parser.add_argument('--omega_range', type=str, action='store', metavar='LOW,HIGH', help='range in low,high format')
 parser.add_argument('-m', '--max', type=int, default=250, help='max_materialize (default 250)')
+parser.add_argument("-f", "--force", action="store_true", help="overwrite job directory if it already exists")
 args = parser.parse_args()
 
 # settings
@@ -54,6 +55,11 @@ if phi_num == 1: phi_step = phi_high
 else: 
   phi_step = int(round((phi_high - phi_low)/(phi_num-1)))
   phi_high += phi_step
+
+if os.path.isdir("./"+job_dir) and not args.force:
+    raise SystemExit("ERROR: Directory " + job_dir + " already exists. Use option -f to overwrite")
+if os.path.isdir("./"+job_dir) and args.force:
+    os.system('rm -rf ./' + job_dir)
 
 # summary
 print("Phi, omega")
@@ -98,7 +104,7 @@ sub['max_materialize'] = max_materialize
 sub['DEST'] = '/store/user/'+griduser_id+'/siggen/lhe/' + job_output + '/'
 sub['request_memory'] = 8000
 sub['JobBatchName'] = job_name
-#sub['+DesiredOS'] = '"SL7"'
+sub['+DesiredOS'] = '"SL7"'
 
 # job directory
 os.system('mkdir ' + job_dir)

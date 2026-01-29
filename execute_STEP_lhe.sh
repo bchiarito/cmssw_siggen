@@ -9,7 +9,7 @@ echo ""
 export INITIAL_DIR=$(pwd)
 export VO_CMS_SW_DIR=/cvmfs/cms.cern.ch
 source $VO_CMS_SW_DIR/cmsset_default.sh
-export SCRAM_ARCH=slc7_amd64_gcc820
+export SCRAM_ARCH=slc7_amd64_gcc700
 scramv1 project CMSSW CMSSW_10_6_27
 cd CMSSW_10_6_27/src
 eval `scramv1 runtime -sh`
@@ -25,6 +25,8 @@ tar -xf madgraph.tgz
 cd MG5_aMC_v2_6_0
 pwd
 ls
+echo "\n=== print contents of my_events ===\n"
+ls my_events/
 echo "\n=== now running ===\n"
 python my_utilities/auto_run.py $1 $2 $3
 echo "\n=== print contents of my_events ===\n"

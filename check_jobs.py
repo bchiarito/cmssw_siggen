@@ -316,7 +316,7 @@ for i, jobInfo in enumerate(jobInfos):
 if not args.summary and not args.aborted and not args.noOutput:
   if args.group:
     def status(line):
-      return (line.split('|'))[1]
+      return (line.split('|'))[2]
     lines = sorted(lines, key=status, reverse=True)
   for line in lines:
     print(line)

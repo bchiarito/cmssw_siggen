@@ -53,7 +53,6 @@ process.configurationMetadata = cms.untracked.PSet(
 )
 
 # Output definition
-
 process.RAWSIMoutput = cms.OutputModule("PoolOutputModule",
     SelectEvents = cms.untracked.PSet(
         SelectEvents = cms.vstring('generation_step')
@@ -76,6 +75,70 @@ process.RAWSIMoutput = cms.OutputModule("PoolOutputModule",
 process.genstepfilter.triggerConditions=cms.vstring("generation_step")
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v15_L1v1', '')
+
+pythia8CommonSettingsBlock = [
+                    'Tune:preferLHAPDF = 2', 
+                    'Main:timesAllowErrors = 10000', 
+                    'Check:epTolErr = 0.01', 
+                    'Beams:setProductionScalesFromLHEF = off', 
+                    'SLHA:keepSM = on', 
+                    'SLHA:minMassSM = 1000.', 
+                    'ParticleDecays:limitTau0 = on', 
+                    'ParticleDecays:tau0Max = 10', 
+                    'ParticleDecays:allowPhotonRadiation = on'
+]
+
+pythia8CUEP8M1SettingsBlock = [
+                    'Tune:pp 14', 
+                    'Tune:ee 7', 
+                    'MultipartonInteractions:pT0Ref=2.4024', 
+                    'MultipartonInteractions:ecmPow=0.25208', 
+                    'MultipartonInteractions:expPow=1.6'
+]
+
+paramaterSetsBlock = [
+                    'pythia8CommonSettings', 
+                    'pythia8CUEP8M1Settings', 
+                    'processParameters'
+]
+
+processParametersBlockEta = [
+                    '90000054:new',
+                    '90000054:name = pomega_bsm',
+                    '90000054:spinType = 1',
+                    '90000054:chargeType = 0',
+                    '90000054:colType = 0',
+                    '90000054:mayDecay = true',
+                    # from pythia eta entry: m0="0.54785"
+                    '90000054:addChannel = 1 0.3931181 0 22 22',
+                    '90000054:addChannel = 1 0.3257150 0 111 111 111',
+                    '90000054:addChannel = 1 0.0002700 0 111 22 22',
+                    '90000054:addChannel = 1 0.2274105 0 211 -211 111',
+                    '90000054:addChannel = 1 0.0460021 0 211 -211 22',
+                    '90000054:addChannel = 1 0.0069003 11 22 11 -11',
+                    '90000054:addChannel = 1 0.0003100 11 22 13 -13',
+                    '90000054:addChannel = 1 0.0000060 0 13 -13',
+                    '90000054:addChannel = 1 0.0002680 12 211 -211 11 -11'
+]
+
+processParametersBlockEtaprime = [
+                    '90000054:new',
+                    '90000054:name = pomega_bsm',
+                    '90000054:spinType = 1',
+                    '90000054:chargeType = 0',
+                    '90000054:colType = 0',
+                    '90000054:mayDecay = true',
+                    # from pythia eta entry: m0="0.54785"
+                    '90000054:addChannel = 1 0.3931181 0 22 22',
+                    '90000054:addChannel = 1 0.3257150 0 111 111 111',
+                    '90000054:addChannel = 1 0.0002700 0 111 22 22',
+                    '90000054:addChannel = 1 0.2274105 0 211 -211 111',
+                    '90000054:addChannel = 1 0.0460021 0 211 -211 22',
+                    '90000054:addChannel = 1 0.0069003 11 22 11 -11',
+                    '90000054:addChannel = 1 0.0003100 11 22 13 -13',
+                    '90000054:addChannel = 1 0.0000060 0 13 -13',
+                    '90000054:addChannel = 1 0.0002680 12 211 -211 11 -11'
+]
 
 #54 (for steffie's signal)
 if options.hadronizer =="54":
@@ -182,7 +245,7 @@ elif options.hadronizer =="54_twoprongdecay":
         )
 
 #90000054 (brandon's signal)
-elif options.hadronizer =="90000054":
+elif options.hadronizer =="90000054" and options.decaytype==1:
         process.generator = cms.EDFilter("Pythia8HadronizerFilter",
             PythiaParameters = cms.PSet(
                 parameterSets = cms.vstring(
@@ -190,41 +253,34 @@ elif options.hadronizer =="90000054":
                     'pythia8CUEP8M1Settings', 
                     'processParameters'
                 ),
-                processParameters = cms.vstring(
-                    '90000054:new',
-                    '90000054:name = pomega_bsm',
-                    '90000054:spinType = 1',
-                    '90000054:chargeType = 0',
-                    '90000054:colType = 0',
-                    '90000054:mayDecay = true',
-                    # from pythia eta entry: m0="0.54785"
-                    '90000054:addChannel = 1 0.3931181 0 22 22',
-                    '90000054:addChannel = 1 0.3257150 0 111 111 111',
-                    '90000054:addChannel = 1 0.0002700 0 111 22 22',
-                    '90000054:addChannel = 1 0.2274105 0 211 -211 111',
-                    '90000054:addChannel = 1 0.0460021 0 211 -211 22',
-                    '90000054:addChannel = 1 0.0069003 11 22 11 -11',
-                    '90000054:addChannel = 1 0.0003100 11 22 13 -13',
-                    '90000054:addChannel = 1 0.0000060 0 13 -13',
-                    '90000054:addChannel = 1 0.0002680 12 211 -211 11 -11'
+                processParameters = cms.vstring(*processParametersBlockEta
                     ),
-                pythia8CUEP8M1Settings = cms.vstring(
-                    'Tune:pp 14', 
-                    'Tune:ee 7', 
-                    'MultipartonInteractions:pT0Ref=2.4024', 
-                    'MultipartonInteractions:ecmPow=0.25208', 
-                    'MultipartonInteractions:expPow=1.6'
+                pythia8CUEP8M1Settings = cms.vstring(*pythia8CUEP8M1SettingsBlock
                 ),
-                pythia8CommonSettings = cms.vstring(
-                    'Tune:preferLHAPDF = 2', 
-                    'Main:timesAllowErrors = 10000', 
-                    'Check:epTolErr = 0.01', 
-                    'Beams:setProductionScalesFromLHEF = off', 
-                    'SLHA:keepSM = on', 
-                    'SLHA:minMassSM = 1000.', 
-                    'ParticleDecays:limitTau0 = on', 
-                    'ParticleDecays:tau0Max = 10', 
-                    'ParticleDecays:allowPhotonRadiation = on'
+                pythia8CommonSettings = cms.vstring(*pythia8CommonSettingsBlock
+                )
+            ),
+            comEnergy = cms.double(13000.0),
+            filterEfficiency = cms.untracked.double(1.0),
+            maxEventsToPrint = cms.untracked.int32(1),
+            pythiaHepMCVerbosity = cms.untracked.bool(False),
+            pythiaPylistVerbosity = cms.untracked.int32(1)
+        )
+
+#90000054 (brandon's signal)
+elif options.hadronizer =="90000054" and options.decaytype==2:
+        process.generator = cms.EDFilter("Pythia8HadronizerFilter",
+            PythiaParameters = cms.PSet(
+                parameterSets = cms.vstring(
+                    'pythia8CommonSettings', 
+                    'pythia8CUEP8M1Settings', 
+                    'processParameters'
+                ),
+                processParameters = cms.vstring(*processParametersBlockEta
+                    ),
+                pythia8CUEP8M1Settings = cms.vstring(*pythia8CUEP8M1SettingsBlock
+                ),
+                pythia8CommonSettings = cms.vstring(*pythia8CommonSettingsBlock
                 )
             ),
             comEnergy = cms.double(13000.0),
@@ -238,6 +294,7 @@ else:
         print "ERROR: No valid hadronizer chosen. Exiting..."
         print options.hadronizer
         exit()
+
 
 process.ProductionFilterSequence = cms.Sequence(process.generator)
 
