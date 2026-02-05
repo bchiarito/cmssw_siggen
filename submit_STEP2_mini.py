@@ -6,26 +6,23 @@ import subprocess
 import argparse
 import socket
 
-griduser_id = (subprocess.check_output("whoami").decode('utf-8')).strip()
+user_id = (subprocess.check_output("whoami").decode('utf-8')).strip()
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-r', '--runname', help='name for output eos area')
-parser.add_argument('input_jobdir', help='job directory for splitlhe step')
-parser.add_argument('-y', '--year', type=str, default="2018", choices=['2018','2017','2016'], help='year')
+parser.add_argument('input', help='job directory of STEP1')
+parser.add_argument('runname', help='name for job directory and output area')
+parser.add_argument('--output_base', '-o ', metavar='PATH', default='/cms/{}/eos/signal_gen_PhiToOmegaOmemga/STEP2'.format(user_id),  help='(hexcms only) base directory for output')
+#parser.add_argument("--proxy", default='', help="location of proxy file")
+parser.add_argument('-y', '--year', type=str, default="2018", choices=['2018','2017','2016'], help=argparse.SUPPRESS)
 parser.add_argument('-m', '--max', type=int, default=250, help='max_materialize (default 250)')
-decaytype = parser.add_mutually_exclusive_group()
-decaytype.add_argument('--eta', action='store_true', default=True, help='')
-decaytype.add_argument('--etaprime', action='store_true', default=True, help='')
-parser.add_argument('--matching', action='store_true', default=True, help='')
-parser.add_argument('--forced2prong', action='store_true', default=False, help='')
-parser.add_argument('--test', '-t', action='store_true', default=False, help='')
-parser.add_argument('--force', '-f', action='store_true', default=False, help='')
-parser.add_argument('--localPremix', '-l', action='store_true', default=False, help='')
-parser.add_argument("--proxy", "-p", default='', help="location of proxy file")
-
+parser.add_argument('--matching', action='store_true', default=True, help=argparse.SUPPRESS)
+parser.add_argument('--forced2prong', action='store_true', default=False, help=argparse.SUPPRESS)
+parser.add_argument('--test', '-t', action='store_true', default=False, help=argparse.SUPPRESS)
+parser.add_argument('--force', '-f', action='store_true', default=False, help=argparse.SUPPRESS)
+parser.add_argument('--localPremix', '-l', action='store_true', default=False, help='pre-copy PU mix file')
 args = parser.parse_args()
 
-if args.proxy == "": raise SystemExit('ERROR: No proxy specified')
+#if args.proxy == "": raise SystemExit('ERROR: No proxy specified')
 
 # get site
 hostname = socket.gethostname()
@@ -34,20 +31,21 @@ elif 'fnal.gov' in hostname: site = 'cmslpc'
 elif 'cern.ch' in hostname: site = 'lxplus'
 else: raise SystemExit('ERROR: Unrecognized site: not hexcms, cmslpc, or lxplus')
 
-if args.input_jobdir[-1] == '/': args.input_jobdir = args.input_jobdir[:-1]
-if not args.runname: run_name = args.input_jobdir.replace('Job_','').replace('_STEP_splitlhe','')
-else: run_name = args.runname
-job_name = run_name+'_STEP_mini'
+if args.input[-1] == '/': args.input = args.input[:-1]
+job_name = args.runname+'_STEP2_mini'
 job_dir = 'Job_'+job_name
-if site == 'cmslpc' : output_eos = '/store/user/'+griduser_id+'/siggen/mini/'+run_name
-if site == 'hexcms' : output_eos = '/cms/chiarito/scratch/'+run_name
+if site == 'cmslpc' : output_area = '/store/user/'+user_id+'/siggen/mini/'+args.runname
+if site == 'hexcms' : output_area = os.path.normpath(args.output_base) + '/' + args.runname
 submit_jdl_filename = 'submit_STEP_mini.jdl'
+res = input('NOTICE: Using\n    {}\n    for output area, please ensure this is correct [Enter to continue / q to quit] '.format(output_area))
+if not res == "": sys.exit()
+print()
 
 # find lhe step output area
 loc = "."
 dirs = []
 for d in os.listdir(loc):
-  if os.path.isdir(d) and d.startswith(args.input_jobdir):
+  if os.path.isdir(d) and d.startswith(args.input):
     dirs.append(os.path.join(loc, d))
 if not len(dirs)==1: raise SystemExit("Job Directory pattern returned zero or >1 directories.")
 jobDir = dirs[0]
@@ -56,6 +54,12 @@ import job_info as job
 input_lhe_location = job.output
 splitting = job.splitting
 numEvents = job.numEventsEach
+
+# get proxy
+if site == 'hexcms':
+  print('NOTICE: Attempting to get grid proxy file ...')
+  proxy_file = os.path.basename(subprocess.getoutput('./helper/proxy_setup.sh'))
+  print('Success.\n')
 
 # make job directory
 if os.path.isdir("./"+job_dir) and args.force: os.system('rm -rf ./' + job_dir)
@@ -83,14 +87,12 @@ with open('queue.dat', 'w') as f:
     count = file[c+1:x]
     b = base.rfind('/')
     out_tag = base[b+1:]
-    output = os.path.join(output_eos, out_tag)
+    output = os.path.join(output_area, out_tag)
     if site == 'hexcms': base = "file:" + input_lhe_location + '/' + base
     f.write(base + ' ' + num + ' ' + output + '\n')
 os.system('cp queue.dat ' + job_dir)
 
-if args.eta: decaytype = 1
-elif args.etaprime: decaytype = 2
-else: decaytype =1
+decaytype =1
 
 if args.forced2prong: forcing = 1
 else: forcing = 0
@@ -110,7 +112,7 @@ initialdir = {0:}
 error  = stdout/$(Cluster)_$(Process)_out.txt
 output = stdout/$(Cluster)_$(Process)_out.txt
 log    = log_$(Cluster).txt
-executable = execute_STEP_mini.sh
+executable = execute_scripts/execute_STEP_mini.sh
 transfer_input_files = ../cmssw_cfgs/GEN_{1:}_cfg.py, ../cmssw_cfgs/SIM_{1:}_cfg.py, ../cmssw_cfgs/DIGIPremix_{1:}_cfg.py, ../cmssw_cfgs/HLT_{1:}_cfg.py, ../cmssw_cfgs/RECO_{1:}_cfg.py, ../cmssw_cfgs/MINIAOD_{1:}_cfg.py, ../cmssw_cfgs/Premix_{1:}.list
 arguments = $(FILE_NUM) {1:} 90000054 {8:} {7:}$(OUTPUT_EOS) $(INPUT_LHE) {2:} {3:} {4:} {9:}
 Notification = never
@@ -126,8 +128,7 @@ JobBatchName = {6:}
   if site == 'cmslpc':
     f.write('+DesiredOS = "SL7"\n')
   if site == 'hexcms':
-    f.write('x509userproxy = ../{}\n'.format(args.proxy))
-    #f.write('x509userproxy = x509up_u756\n')
+    f.write('x509userproxy = ../{}\n'.format(proxy_file))
   f.write("\nqueue LHEBASE, FILE_NUM, OUTPUT_EOS from queue.dat\n")
 
 os.system('cp '+submit_jdl_filename + ' ' + job_dir)
@@ -150,7 +151,7 @@ print(cluster)
 
 # finish
 with open('job_info.py', 'w') as f:
-  f.write('output = "'+output_eos+'/"\n')  
+  f.write('output = "'+output_area+'/"\n')  
   f.write('cluster = '+cluster+'\n')  
   f.write('splitting = '+str(splitting)+'\n')
   f.write('resubmits = []\n')

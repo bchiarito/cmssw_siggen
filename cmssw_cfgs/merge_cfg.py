@@ -20,11 +20,21 @@ options.register ('input',
           VarParsing.multiplicity.singleton,
           VarParsing.varType.string,
           "search eos area for files")
+options.register ('site',
+          '',
+          VarParsing.multiplicity.singleton,
+          VarParsing.varType.string,
+          "")
 options.parseArguments()
 
-print "xrdfs root://cmseos.fnal.gov ls " + options.input
-files = (subprocess.check_output("xrdfs root://cmseos.fnal.gov ls " + options.input, shell=True)).split()
-print files
+if options.site == 'cmslpc':
+  print "xrdfs root://cmseos.fnal.gov ls " + options.input
+  files = (subprocess.check_output("xrdfs root://cmseos.fnal.gov ls " + options.input, shell=True)).split()
+  print files
+if options.site == 'hexcms':
+  files = (subprocess.check_output("ls " + options.input, shell=True)).split()
+  files = ['file:' + options.input + '/' + filename for filename in files]
+  print files
 
 process = cms.Process("Merge")
 process.source = cms.Source ("PoolSource",

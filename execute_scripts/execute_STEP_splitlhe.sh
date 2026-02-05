@@ -6,4 +6,4 @@ echo ""
 echo "Here there are all the input arguments:"
 echo $@
 echo ""
-python3 split_helper.py $1 $2 $3 -s=$4
+python3 split_helper.py $1 $2 $3 -s=$4 --local=$5

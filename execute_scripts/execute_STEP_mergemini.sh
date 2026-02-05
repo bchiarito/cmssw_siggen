@@ -13,9 +13,17 @@ cd CMSSW_10_6_20/src
 eval `scramv1 runtime -sh`
 cd ../..
 
-cmsRun merge_cfg.py input=$1 outputFile=output.root maxEvents=-1
+cmsRun merge_cfg.py input=$1 outputFile=output.root maxEvents=-1 site=$4
 echo ""
 echo "finished cmsRun"
 ls
-xrdcp --nopbar output.root $2/$3.root
+echo ""
+
+if [[ ${4} == "cmslpc" ]]; then
+  xrdcp --nopbar output.root $2/$3.rooti
+fi
+if [[ ${4} == "hexcms" ]]; then
+  cp output.root $2/$3.root
+fi
+
 rm *.root

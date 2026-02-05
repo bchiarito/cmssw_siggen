@@ -6,15 +6,15 @@ import subprocess
 import socket
 import argparse
 
-griduser_id = (subprocess.check_output("whoami").decode('utf-8')).strip()
-#griduser_id = (subprocess.check_output("voms-proxy-info --identity", shell=True).decode('utf-8')).split('/')[5][3:]
+user_id = (subprocess.check_output("whoami").decode('utf-8')).strip()
 
 parser = argparse.ArgumentParser()
 parser.add_argument('input', help='directory with lhes or job directory from STEP0')
 parser.add_argument('runname', help='name for job directory and output area')
+parser.add_argument('--output_base', '-o ', metavar='PATH', default='/cms/{}/eos/signal_gen_PhiToOmegaOmemga/STEP1'.format(user_id),  help='(hexcms only) base directory for output')
 parser.add_argument('-s', '--split', metavar='N', type=int, default=1, help='split each lhe into this many subjobs')
 parser.add_argument('-m', '--max', type=int, default=250, help='max_materialize (default 250)')
-parser.add_argument('-o', '--omitNumEvents', default=False, action='store_true', help='debug option')
+parser.add_argument('-n', '--omitNumEvents', default=False, action='store_true', help=argparse.SUPPRESS)
 args = parser.parse_args()
 
 # get site
@@ -28,13 +28,14 @@ if site == 'hexcms': local = True
 else: local = False
 
 if args.input[-1] == '/': args.input = args.input[:-1]
-#if not args.runname: run_name = args.input.replace('Job_','').replace('_STEP_lhe','')
-#else: run_name = args.runname
-job_name = args.runname+'_STEP_splitlhe'
+job_name = args.runname+'_STEP1_splitlhe'
 job_dir = 'Job_'+job_name
 splitting = args.split
-if local: output_area = '/cms/chiarito/eos/siggen/splitlhe/'+args.runname
-else: output_area = '/store/user/'+griduser_id+'/siggen/splitlhe/'+args.runname
+if local: output_area = os.path.normpath(args.output_base) + '/' + args.runname
+else: output_area = '/store/user/'+user_id+'/siggen/splitlhe/'+args.runname
+res = input('NOTICE: Using\n    {}\n    for output area, please ensure this is correct [Enter to continue / q to quit] '.format(output_area))
+if not res == "": sys.exit()
+print()
 submit_jdl_filename = 'submit_STEP_splitlhe.jdl'
 
 # find input lhe area
@@ -65,7 +66,7 @@ output = stdout/$(Cluster)_$(Process)_out.txt
 log    = log_$(Cluster).txt
 executable = execute_scripts/execute_STEP_splitlhe.sh
 transfer_input_files = ../execute_scripts/split_helper.py, ../execute_scripts/splitLHE.py
-arguments = {} {} {} {}
+arguments = {} {} {} {} {}
 Notification = never
 request_memory = 4000
 should_transfer_files = YES
@@ -74,7 +75,7 @@ max_materialize = {}
 JobBatchName = {}
 
 queue
-""".format(job_dir, input_lhe_location, output_area, args.runname, str(splitting), str(args.max), job_name)
+""".format(job_dir, input_lhe_location, output_area, args.runname, str(splitting), int(local), str(args.max), job_name)
 )
 os.system('cp '+submit_jdl_filename + ' ' + job_dir)
 
