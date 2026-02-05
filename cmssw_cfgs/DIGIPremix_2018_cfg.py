@@ -9,6 +9,7 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ("python")
 options.register("inputFile", "file:SIM.root", VarParsing.multiplicity.singleton, VarParsing.varType.string, "")
 options.register("numEvents", -1, VarParsing.multiplicity.singleton, VarParsing.varType.int, "")
+options.register("localPremix", 0, VarParsing.multiplicity.singleton, VarParsing.varType.int, "")
 options.setDefault("outputFile", "file:DIGIPremix.root")
 options.parseArguments()
 from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
@@ -32,7 +33,8 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(options.numEvents)
+    #input = cms.untracked.int32(options.numEvents)
+    input = cms.untracked.int32(-1)
 )
 
 # Input source
@@ -86,19 +88,34 @@ process.PREMIXRAWoutput = cms.OutputModule("PoolOutputModule",
 
 # Additional output definition
 
-# Other statements
-#f=open("Premix_RunIISummer20ULPrePremix-UL18_106X_upgrade2018_realistic_v11_L1v1-v2.list", "r")
+# Premix
+print options.localPremix
+print options.numEvents
 f=open("Premix_2018.list", "r")
 PU_files = f.readlines()
 f.close()
 PU_file = random.choice(PU_files)
+PU_file = str.rstrip(PU_file)
+print PU_file
+if options.localPremix == 1:
+    redirector = "xrootd-cms.infn.it"
+    full_redirector = "root://xrootd-cms.infn.it/"
+    prefix = '/store/test/xrootd/T2_BE_IIHE'
+    test_command = "xrdfs {} ls -l {}/{}".format(redirector, prefix, PU_file)
+    print test_command
+    os.system(test_command)
+    copy_command = "edmCopyPickMerge maxEvents={} inputFiles={} outputFile=premix.root".format(options.numEvents, full_redirector + prefix + PU_file)
+    print copy_command
+    os.system(copy_command)
+    pileup_file = 'file:premix.root'
+    #process.mixData.input.fileNames = cms.untracked.vstring(['file:premix.root'])
+else:
+    pileup_file = 'root://cms-xrd-global.cern.ch/'+PU_file
+    #process.mixData.input.fileNames = cms.untracked.vstring(['file:root://cms-xrd-global.cern.ch/'+PU_file])
+print pileup_file
+process.mixData.input.fileNames = cms.untracked.vstring([pileup_file])
 
-#print PU_file
-#os.system('xrdcp root://cmsxrootd.fnal.gov/'+str.rstrip(PU_file)+' ./premix.root')
-#process.mixData.input.fileNames = cms.untracked.vstring(['file:premix.root'])
-
-#process.mixData.input.fileNames = cms.untracked.vstring(['file:root://cmsxrootd.fnal.gov/'+PU_file])
-process.mixData.input.fileNames = cms.untracked.vstring(['file:root://cms-xrd-global.cern.ch/'+PU_file])
+# Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v15_L1v1', '')
 
