@@ -20,7 +20,7 @@ ls
 echo ""
 
 if [[ ${4} == "cmslpc" ]]; then
-  xrdcp --nopbar output.root $2/$3.rooti
+  xrdcp --nopbar output.root $2/$3.root
 fi
 if [[ ${4} == "hexcms" ]]; then
   cp output.root $2/$3.root
