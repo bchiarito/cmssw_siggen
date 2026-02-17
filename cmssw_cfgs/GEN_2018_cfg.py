@@ -96,12 +96,6 @@ pythia8CUEP8M1SettingsBlock = [
                     'MultipartonInteractions:expPow=1.6'
 ]
 
-paramaterSetsBlock = [
-                    'pythia8CommonSettings', 
-                    'pythia8CUEP8M1Settings', 
-                    'processParameters'
-]
-
 processParametersBlockEta = [
                     '90000054:new',
                     '90000054:name = pomega_bsm',
@@ -121,24 +115,22 @@ processParametersBlockEta = [
                     '90000054:addChannel = 1 0.0002680 12 211 -211 11 -11'
 ]
 
-processParametersBlockEtaprime = [
-                    '90000054:new',
-                    '90000054:name = pomega_bsm',
-                    '90000054:spinType = 1',
-                    '90000054:chargeType = 0',
-                    '90000054:colType = 0',
-                    '90000054:mayDecay = true',
-                    # from pythia eta entry: m0="0.54785"
-                    '90000054:addChannel = 1 0.3931181 0 22 22',
-                    '90000054:addChannel = 1 0.3257150 0 111 111 111',
-                    '90000054:addChannel = 1 0.0002700 0 111 22 22',
-                    '90000054:addChannel = 1 0.2274105 0 211 -211 111',
-                    '90000054:addChannel = 1 0.0460021 0 211 -211 22',
-                    '90000054:addChannel = 1 0.0069003 11 22 11 -11',
-                    '90000054:addChannel = 1 0.0003100 11 22 13 -13',
-                    '90000054:addChannel = 1 0.0000060 0 13 -13',
-                    '90000054:addChannel = 1 0.0002680 12 211 -211 11 -11'
+processParametersBlockEtaPrime = [
+            '90000054:new',
+            '90000054:name = pomega_bsm',
+            '90000054:spinType = 1',
+            '90000054:chargeType = 0',
+            '90000054:colType = 0',
+            '90000054:mayDecay = true',
+            '90000054:addChannel = 1 0.4365815 0 211 -211 221',
+            '90000054:addChannel = 1 0.2947428 0 113 22',
+            '90000054:addChannel = 1 0.2172848 0 111 111 221',
+            '90000054:addChannel = 1 0.0276636 0 223 22',
+            '90000054:addChannel = 1 0.0219297 0 22 22',
+            '90000054:addChannel = 1 0.0016900 0 111 111 111',
+            '90000054:addChannel = 1 0.0001076 0 13 -13 22'
 ]
+
 
 #54 (for steffie's signal)
 if options.hadronizer =="54":
@@ -245,7 +237,7 @@ elif options.hadronizer =="54_twoprongdecay":
         )
 
 #90000054 (brandon's signal)
-elif options.hadronizer =="90000054" and options.decaytype==1:
+elif options.hadronizer =="eta":
         process.generator = cms.EDFilter("Pythia8HadronizerFilter",
             PythiaParameters = cms.PSet(
                 parameterSets = cms.vstring(
@@ -268,7 +260,7 @@ elif options.hadronizer =="90000054" and options.decaytype==1:
         )
 
 #90000054 (brandon's signal)
-elif options.hadronizer =="90000054" and options.decaytype==2:
+elif options.hadronizer =="etaprime":
         process.generator = cms.EDFilter("Pythia8HadronizerFilter",
             PythiaParameters = cms.PSet(
                 parameterSets = cms.vstring(
@@ -276,7 +268,7 @@ elif options.hadronizer =="90000054" and options.decaytype==2:
                     'pythia8CUEP8M1Settings', 
                     'processParameters'
                 ),
-                processParameters = cms.vstring(*processParametersBlockEta
+                processParameters = cms.vstring(*processParametersBlockEtaPrime
                     ),
                 pythia8CUEP8M1Settings = cms.vstring(*pythia8CUEP8M1SettingsBlock
                 ),

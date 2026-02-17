@@ -4,6 +4,7 @@ echo ">>> Running on: `uname -a`"
 echo ">>> System software: `cat /etc/redhat-release`"
 echo ">>> Here there are all the input arguments:"
 echo $@
+echo ""
 source /cvmfs/cms.cern.ch/cmsset_default.sh  ## if a tcsh script, use .csh instead of .sh
 export SCRAM_ARCH=slc7_amd64_gcc700
 
@@ -80,8 +81,12 @@ printf "\n\nDoing RECO > MINI\n"
 cmsRun MINIAOD_$2_cfg.py outputFile=miniAOD_$1.root
 ls
 
-#Cleaning up
-#xrdcp --nopbar miniAOD_$1.root $5/miniAOD_$1.root
-mkdir -p $5
-cp miniAOD_$1.root $5/miniAOD_$1.root
+#Stageout
+printf "\n\nDoing Stageout\n"
+if [[ "${1#root://}" != "$5" ]]; then
+  xrdcp --nopbar miniAOD_$1.root $5/miniAOD_$1_proc${11}.root
+else
+  mkdir -p $5
+  cp miniAOD_$1.root $5/miniAOD_$1_proc${11}.root
+fi
 rm GEN.root SIM.root DIGIPremix.root HLT.root RECO.root miniAOD_$1.root

@@ -14,7 +14,7 @@ parser.add_argument('runname', help='name for job directory and output area')
 parser.add_argument('--output_base', '-o ', metavar='PATH', default='/cms/{}/eos/signal_gen_PhiToOmegaOmemga/STEP1'.format(user_id),  help='(hexcms only) base directory for output')
 parser.add_argument('-s', '--split', metavar='N', type=int, default=1, help='split each lhe into this many subjobs')
 parser.add_argument('-m', '--max', type=int, default=250, help='max_materialize (default 250)')
-parser.add_argument('-n', '--omitNumEvents', default=False, action='store_true', help=argparse.SUPPRESS)
+parser.add_argument('-n', '--omitNumEvents', default=True, action='store_true', help=argparse.SUPPRESS) # only needed if using localPremix in next step
 args = parser.parse_args()
 
 # get site
@@ -26,6 +26,10 @@ else: raise SystemExit('ERROR: Unrecognized site: not hexcms, cmslpc, or lxplus'
 
 if site == 'hexcms': local = True
 else: local = False
+
+# proxy check
+if site == 'cmslpc':
+    os.system('helper/proxy_check_cmslpc.sh')
 
 if args.input[-1] == '/': args.input = args.input[:-1]
 job_name = args.runname+'_STEP1_splitlhe'
@@ -39,9 +43,11 @@ print()
 submit_jdl_filename = 'submit_STEP_splitlhe.jdl'
 
 # find input lhe area
-if local: 
+input_is_jobdir = False
+if not input_is_jobdir:
     input_lhe_location = args.input
 else:
+    """
     loc = "."
     dirs = []
     for d in os.listdir(loc):
@@ -52,6 +58,7 @@ else:
     sys.path.append(jobDir)
     import job_info as job
     input_lhe_location = job.output
+    """
 
 # make job directory
 os.system('mkdir '+job_dir)
@@ -111,9 +118,12 @@ else:
     numEventsEach = -1
 
 # finish
+submit_command = ''
+for a in sys.argv: submit_command += a + ' '
 with open('job_info.py', 'w') as f:
   f.write('output = "'+output_area+'/"\n')  
   f.write('splitting = '+str(splitting)+'\n')  
   f.write('numEventsEach = '+str(numEventsEach)+'\n')
+  f.write('submit_command = "'+str(submit_command.strip())+'"\n')
 os.system('mv job_info.py '+job_dir)
 os.system('rm '+submit_jdl_filename)

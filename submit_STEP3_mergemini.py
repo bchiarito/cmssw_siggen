@@ -27,6 +27,10 @@ else: raise SystemExit('ERROR: Unrecognized site: not hexcms, cmslpc, or lxplus'
 if site == 'hexcms': local = True
 else: local = False
 
+# proxy check
+if site == 'cmslpc':
+  os.system('helper/proxy_check_cmslpc.sh')
+
 # find mini step output area
 loc = "."
 dirs = []
@@ -93,9 +97,11 @@ os.system('cp '+submit_file+' '+job_dir)
 os.system('condor_submit '+submit_file)
 
 # finish
+submit_command = ''
+for a in sys.argv: submit_command += a + ' '
 with open('job_info.py', 'w') as f:
   f.write('output = "'+output_area+'/"\n')  
+  f.write('submit_command = "'+str(submit_command.strip())+'"\n')
 os.system('mv job_info.py '+job_dir)
 os.system('rm '+submit_file)
 os.system('rm queue.dat')
-

@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('input', help='job directory of STEP1')
 parser.add_argument('runname', help='name for job directory and output area')
 parser.add_argument('--output_base', '-o ', metavar='PATH', default='/cms/{}/eos/signal_gen_PhiToOmegaOmemga/STEP2'.format(user_id),  help='(hexcms only) base directory for output')
-#parser.add_argument("--proxy", default='', help="location of proxy file")
+parser.add_argument('-z', '--hadronizer', type=str, default="eta", choices=['eta','etaprime'], help='')
 parser.add_argument('-y', '--year', type=str, default="2018", choices=['2018','2017','2016'], help=argparse.SUPPRESS)
 parser.add_argument('-m', '--max', type=int, default=250, help='max_materialize (default 250)')
 parser.add_argument('--matching', action='store_true', default=True, help=argparse.SUPPRESS)
@@ -55,7 +55,9 @@ input_lhe_location = job.output
 splitting = job.splitting
 numEvents = job.numEventsEach
 
-# get proxy
+# proxy check
+if site == 'cmslpc':
+  os.system('helper/proxy_check_cmslpc.sh')
 if site == 'hexcms':
   print('NOTICE: Attempting to get grid proxy file ...')
   proxy_file = os.path.basename(subprocess.getoutput('./helper/proxy_setup.sh'))
@@ -76,6 +78,7 @@ with open('queue.dat', 'w') as f:
   if site == 'cmslpc': input_split_lhes = (subprocess.getoutput("xrdfs root://cmseos.fnal.gov ls " + input_lhe_location)).split('\n')
   if site == 'hexcms': input_split_lhes = (subprocess.getoutput("ls " + input_lhe_location)).split('\n')
   input_split_lhes.sort(key=ls_sort)
+  total_procs = len(input_split_lhes)
 
   for file in input_split_lhes:
     x = file.rfind('_')
@@ -92,8 +95,6 @@ with open('queue.dat', 'w') as f:
     f.write(base + ' ' + num + ' ' + output + '\n')
 os.system('cp queue.dat ' + job_dir)
 
-decaytype =1
-
 if args.forced2prong: forcing = 1
 else: forcing = 0
 
@@ -105,7 +106,6 @@ if site == 'hexcms': prefix = ""
 if site == 'cmslpc': prefix = "root://cmseos.fnal.gov/"
 
 with open(submit_jdl_filename, 'w') as f:
-  numEvents=5
   f.write(
 """universe = vanilla
 initialdir = {0:}
@@ -114,7 +114,7 @@ output = stdout/$(Cluster)_$(Process)_out.txt
 log    = log_$(Cluster).txt
 executable = execute_scripts/execute_STEP_mini.sh
 transfer_input_files = ../cmssw_cfgs/GEN_{1:}_cfg.py, ../cmssw_cfgs/SIM_{1:}_cfg.py, ../cmssw_cfgs/DIGIPremix_{1:}_cfg.py, ../cmssw_cfgs/HLT_{1:}_cfg.py, ../cmssw_cfgs/RECO_{1:}_cfg.py, ../cmssw_cfgs/MINIAOD_{1:}_cfg.py, ../cmssw_cfgs/Premix_{1:}.list
-arguments = $(FILE_NUM) {1:} 90000054 {8:} {7:}$(OUTPUT_EOS) $(INPUT_LHE) {2:} {3:} {4:} {9:}
+arguments = $(FILE_NUM) {1:} {10:} {8:} {7:}$(OUTPUT_EOS) $(INPUT_LHE) {2:} {3:} {4:} {9:} $(Process)
 Notification = never
 request_memory = 4000
 should_transfer_files = YES
@@ -122,7 +122,7 @@ when_to_transfer_output = ON_EXIT
 max_materialize = {5:}
 INPUT_LHE = {7:}$(LHEBASE)_$(FILE_NUM).lhe
 JobBatchName = {6:}
-""".format(job_dir, args.year, decaytype, forcing, matching, str(args.max), job_name, prefix, numEvents, int(args.localPremix)))
+""".format(job_dir, args.year, "placeholder", forcing, matching, str(args.max), job_name, prefix, numEvents, int(args.localPremix), args.hadronizer))
   if site == 'hexcms':
     f.write('+SingularityImage = "/cvmfs/unpacked.cern.ch/registry.hub.docker.com/cmssw/el7:x86_64"\n')
   if site == 'cmslpc':
@@ -150,10 +150,14 @@ cluster = (out.split()[-1])[:-1]
 print(cluster)
 
 # finish
+submit_command = ''
+for a in sys.argv: submit_command += a + ' '
 with open('job_info.py', 'w') as f:
   f.write('output = "'+output_area+'/"\n')  
   f.write('cluster = '+cluster+'\n')  
+  f.write('queue = '+str(total_procs)+'\n')
   f.write('splitting = '+str(splitting)+'\n')
+  f.write('submit_command = "'+str(submit_command.strip())+'"\n')
   f.write('resubmits = []\n')
 os.system('mv job_info.py '+job_dir)
 os.system('mv '+submit_jdl_filename+' '+job_dir)
